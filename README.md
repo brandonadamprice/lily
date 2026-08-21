@@ -17,6 +17,11 @@ install or internet needed.
   back to the level map
 - 🔊 button (top right) mutes the music and sounds
 - Bump into a butterfly and it flutters out of the way!
+- Land on a smiley **trampoline flower** for a super bounce (level 2+)
+- Collect **every star** in a level for a PERFECT ⭐ badge on the level map
+- Watch for the friendly lava fish leaping in the background
+- Beating level 10 triggers a grand finale: Lily flies a rainbow
+  loop-the-loop with fireworks!
 
 ## The 10 magic unlocks
 
@@ -27,7 +32,7 @@ install or internet needed.
 | 3 | 🦋 Butterfly Friends |
 | 4 | 🧲 Star Magnet |
 | 5 | 💫 Triple Flutter |
-| 6 | 🪽 Magic Wings |
+| 6 | 🪽 Magic Wings — hold JUMP in the air to glide! |
 | 7 | 🦘 Super Bounce |
 | 8 | 🌠 Glitter Gallop |
 | 9 | 👑 Star Crown |

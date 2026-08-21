@@ -75,6 +75,10 @@
     width: 58px; height: 58px; border-radius: 50%; border: none;
     font-size: 22px; font-family: inherit; cursor: pointer;
     box-shadow: 0 4px 0 rgba(160,60,120,.25);
+    position: relative;
+  }
+  .lvlbtn.perfect::after {
+    content: '⭐'; position: absolute; top: -8px; right: -8px; font-size: 16px;
   }
   .lvlbtn:active { transform: translateY(3px); box-shadow: none; }
   .lvlbtn.done   { background: linear-gradient(180deg, #ffe9a8, #ffd353); }
@@ -83,6 +87,19 @@
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
   .mapcap { font-size: 15px; color: #8a76a8; margin-top: 10px; }
 
+  .card .rainbowtext {
+    background: linear-gradient(90deg, #ff5f5f,#ffb14d,#ffe94d,#6fdc6f,#5fb8ff,#b38fff,#ff5f5f);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: rbslide 2s linear infinite;
+  }
+  @keyframes rbslide { to { background-position: 200% center; } }
+  #winDance { font-size: 40px; margin-top: 4px; }
+  #winDance span { display: inline-block; animation: bounce 0.8s ease-in-out infinite; }
+  #winDance span:nth-child(2) { animation-delay: .15s; }
+  #winDance span:nth-child(3) { animation-delay: .3s; }
+  #unlockTip { font-size: 17px; color: #8a76a8; margin: -4px 0 10px; }
+
   #unlockBox {
     font-size: 23px; color: #7a2f8f;
     background: linear-gradient(180deg, #fff7d6, #ffe9a8);
@@ -90,7 +107,9 @@
     margin: 4px 0 14px; box-shadow: 0 0 26px rgba(255,210,80,.8);
   }
   .tiny { margin-top: 12px; font-size: 13px; }
-  .tiny a { color: #b5a8c9; text-decoration: none; }
+  .tiny .smallbtn { font-size: 14px; padding: 7px 16px; }
+  .smallbtn.danger { border-color: #f0a8a8; color: #d04545; }
+  #resetConfirm b { color: #d04545; font-size: 16px; }
 
   #toast {
     position: fixed; top: 84px; left: 50%; transform: translateX(-50%);
@@ -126,7 +145,14 @@
     <div class="levelmap" id="levelMap"></div>
     <div class="mapcap" id="mapCap">Win a level to unlock new magic!</div>
     <div class="keys">⬅ ➡ run &nbsp;•&nbsp; ⬆ or SPACE to jump &nbsp;•&nbsp; jump again in the air to flutter ✨</div>
-    <div class="tiny"><a href="#" id="resetLink">↺ start my magic over</a></div>
+    <div class="tiny">
+      <button class="smallbtn" id="resetLink">↺ Start my magic over</button>
+      <span id="resetConfirm" class="hidden">
+        <b>Lose ALL your magic?</b><br>
+        <button class="smallbtn danger" id="resetYes">Yes, start over</button>
+        <button class="smallbtn" id="resetNo">No, keep my magic!</button>
+      </span>
+    </div>
   </div>
 </div>
 
@@ -144,9 +170,11 @@
 <div id="winScreen" class="overlay hidden">
   <div class="card">
     <span class="bigmoji" id="winEmoji">🌈</span>
+    <div id="winDance" class="hidden"><span>🦄</span> <span>💖</span> <span>🦄</span></div>
     <h1 id="winTitle">Level complete!</h1>
     <p id="winMsg"></p>
-    <div id="unlockBox"></div><br>
+    <div id="unlockBox"></div>
+    <div id="unlockTip"></div>
     <button class="playbtn" id="nextBtn">▶ Next Level!</button><br>
     <button class="smallbtn" id="mapBtn">🗺️ Choose a level</button>
   </div>
@@ -183,20 +211,28 @@ const GRAV = 1900, RUN = 310, FLUT_V = 620;
 
 // ---------- magic unlocks (one per level) ----------
 const MAGIC = [
-  {icon:'✨', name:'Sparkle Trail'},
-  {icon:'🌈', name:'Rainbow Mane'},
-  {icon:'🦋', name:'Butterfly Friends'},
-  {icon:'🧲', name:'Star Magnet'},
-  {icon:'💫', name:'Triple Flutter'},
-  {icon:'🪽', name:'Magic Wings'},
-  {icon:'🦘', name:'Super Bounce'},
-  {icon:'🌠', name:'Glitter Gallop'},
-  {icon:'👑', name:'Star Crown'},
-  {icon:'🔮', name:'ALL the Magic!'},
+  {icon:'✨', name:'Sparkle Trail',      tip:'Sparkles follow you when you run!'},
+  {icon:'🌈', name:'Rainbow Mane',       tip:"Lily's mane glows rainbow all the time!"},
+  {icon:'🦋', name:'Butterfly Friends',  tip:'Two butterfly pals fly with you!'},
+  {icon:'🧲', name:'Star Magnet',        tip:'Stars float right to you!'},
+  {icon:'💫', name:'Triple Flutter',     tip:'Now you can jump three times!'},
+  {icon:'🪽', name:'Magic Wings',        tip:'Hold JUMP in the air to glide down slowly!'},
+  {icon:'🦘', name:'Super Bounce',       tip:'Your jumps are extra bouncy now!'},
+  {icon:'🌠', name:'Glitter Gallop',     tip:'Glitter bursts wherever you gallop!'},
+  {icon:'👑', name:'Star Crown',         tip:'Shiny stars circle your head!'},
+  {icon:'🔮', name:'ALL the Magic!',     tip:'Lily is the most magical unicorn ever!'},
 ];
-let unlockedCount = 0;
-try { unlockedCount = Math.min(10, +localStorage.getItem('uq_magic') || 0); } catch (e) {}
-function saveProgress() { try { localStorage.setItem('uq_magic', unlockedCount); } catch (e) {} }
+let unlockedCount = 0, perfectMask = 0;
+try {
+  unlockedCount = Math.min(10, +localStorage.getItem('uq_magic') || 0);
+  perfectMask = +localStorage.getItem('uq_perfect') || 0;
+} catch (e) {}
+function saveProgress() {
+  try {
+    localStorage.setItem('uq_magic', unlockedCount);
+    localStorage.setItem('uq_perfect', perfectMask);
+  } catch (e) {}
+}
 const hasMagic = k => unlockedCount >= k;
 const jumpV = () => hasMagic(7) ? 830 : 760;   // Super Bounce
 const maxFlut = () => hasMagic(5) ? 2 : 1;     // Triple Flutter
@@ -212,9 +248,10 @@ const SKIES = [
 
 // ---------- level state (rebuilt by loadLevel) ----------
 let currentLevel = 1;
-let plats = [], stars = [], decoBflies = [];
+let plats = [], stars = [], decoBflies = [], flowers = [];
 let crystal = {x: 2000, y: 352};
 let worldW = 3000, maxX = 2900;
+let fish = null, nextFishT = 4;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, u) => a + (b - a) * u;
@@ -226,7 +263,7 @@ function buildLevel(n) {
   const R = () => hash(seed++);
   const count = 6 + n * 2;                       // 8 platforms on level 1 -> 26 on level 10
   const P = [{x:-200, y:430, w:520}];            // start island (sign lives here)
-  const S = [];
+  const S = [], F = [];
   let x = 320, prevY = 430;
   for (let i = 1; i < count; i++) {
     const gap = 60 + R() * (40 + n * 7);         // gently wider gaps later
@@ -238,6 +275,10 @@ function buildLevel(n) {
       p.amp = 20 + R() * 20; p.spd = 0.9 + R() * 0.7; p.ph = R() * 6.28;
     }
     P.push(p);
+    if (n >= 2 && R() < 0.2 && p.w > 140) {
+      F.push({p, x: p.x + 45 + R() * (p.w - 90),
+              col: PASTELS[Math.floor(R() * PASTELS.length)], bt: -9});
+    }
     if (R() < 0.85) S.push({x: p.x + p.w/2, y: Math.max(150, p.y - 70 - R() * 30), taken:false, ph: R()*6.28});
     if (R() < 0.3)  S.push({x: x + gap/2, y: Math.max(150, Math.min(prevY, p.y) - 60), taken:false, ph: R()*6.28});
     x = p.x + p.w;
@@ -252,7 +293,7 @@ function buildLevel(n) {
             ox:0, oy:0, vx:0, vy:0, startled:0});
   }
   return {
-    plats: P, stars: S, bflies: B,
+    plats: P, stars: S, bflies: B, flowers: F,
     crystal: {x: endP.x + endP.w - 140, y: 352},
     worldW: endP.x + endP.w + 80,
     maxX: endP.x + endP.w - 30,
@@ -274,13 +315,16 @@ let rescueT = 0, rescueX = 0;
 let cloudGone = null;
 let winT = 0, winShown = false, winWasNew = false, rainbow = false;
 let confettiTimer = 0;
+let finale = false, finaleStart = {x:0, y:0}, finaleTrail = [], fwTimer = 0;
 
 function loadLevel(n) {
   currentLevel = n;
   const L = buildLevel(n);
-  plats = L.plats; stars = L.stars; decoBflies = L.bflies;
+  plats = L.plats; stars = L.stars; decoBflies = L.bflies; flowers = L.flowers;
   crystal = L.crystal; worldW = L.worldW; maxX = L.maxX;
   got = 0;
+  finale = false; finaleTrail.length = 0; fwTimer = 0;
+  fish = null; nextFishT = 4;
   player.x = 60; player.y = 410; player.vx = 0; player.vy = 0;
   player.facing = 1; player.onGround = false; player.flut = 0; player.stand = null;
   lastSafePlat = plats[0]; lastSafeX = 60;
@@ -290,7 +334,7 @@ function loadLevel(n) {
 }
 
 // ---------- input ----------
-const keys = {l:false, r:false};
+const keys = {l:false, r:false, j:false};
 let jumpBuf = 0, coyote = 0;
 function pressJump() { jumpBuf = 0.14; }
 
@@ -305,13 +349,17 @@ addEventListener('keydown', e => {
   if (state === 'title') { startGame(Math.min(unlockedCount + 1, 10)); return; }
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.l = true;
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.r = true;
-  if ((e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'W') && !e.repeat) pressJump();
+  if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'W') {
+    keys.j = true;
+    if (!e.repeat) pressJump();
+  }
 });
 addEventListener('keyup', e => {
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.l = false;
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.r = false;
+  if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'W') keys.j = false;
 });
-addEventListener('blur', () => { keys.l = keys.r = false; });
+addEventListener('blur', () => { keys.l = keys.r = keys.j = false; });
 
 function bindHold(id, on, off) {
   const el = document.getElementById(id);
@@ -322,7 +370,7 @@ function bindHold(id, on, off) {
 }
 bindHold('btnL', () => keys.l = true,  () => keys.l = false);
 bindHold('btnR', () => keys.r = true,  () => keys.r = false);
-bindHold('btnJ', () => pressJump(),    () => {});
+bindHold('btnJ', () => { pressJump(); keys.j = true; }, () => keys.j = false);
 
 // ---------- audio ----------
 let AC = null, master = null, muted = false;
@@ -393,6 +441,22 @@ function sWin() {
   [523.25, 659.25, 783.99, 1046.5].forEach(f =>
     tone(f, 1.1, 'triangle', 0.09, t0 + 0.7));
 }
+function sBoing() { tone(160, 0.3, 'square', 0.10, 0, 820); tone(320, 0.3, 'sine', 0.08, 0, 1200); }
+function sPop()   { tone(700, 0.2, 'triangle', 0.12, 0, 120); }
+function sPerfect() {
+  if (!AC) return;
+  const t0 = AC.currentTime;
+  [1318.5, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.18, 'triangle', 0.15, t0 + i * 0.09));
+}
+function sFinale() {
+  if (!AC) return;
+  const t0 = AC.currentTime;
+  const run = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.7, 1318.5, 1568, 1760, 2093];
+  run.forEach((f, i) => tone(f, 0.16, 'triangle', 0.16, t0 + i * 0.07));
+  [523.25, 659.25, 783.99].forEach(f => tone(f, 2.2, 'sine', 0.05, t0 + 0.8));
+  [2093, 2637, 3136].forEach((f, i) => tone(f, 0.7, 'sine', 0.06, t0 + 1.2 + i * 0.5));
+  [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(f, 0.25, 'triangle', 0.15, t0 + 2.8 + i * 0.12));
+}
 function musicTick() {
   if (!AC || state === 'title') return;
   // after a pause, skip ahead instead of machine-gunning the missed notes
@@ -434,6 +498,7 @@ const PASTELS = ['#ff8fc8','#ffd94d','#8fd8ff','#b28fff','#8fffb0','#ffb28f'];
 
 // ---------- flow ----------
 function refreshTitle() {
+  hideResetConfirm();
   const next = Math.min(unlockedCount + 1, 10);
   document.getElementById('startBtn').textContent =
     unlockedCount >= 10 ? '▶ Play Level 10!' : '▶ Play Level ' + next + '!';
@@ -450,6 +515,7 @@ function refreshTitle() {
       b.classList.add('done');
       b.textContent = MAGIC[i-1].icon;
       b.title = 'Level ' + i + ' — ' + MAGIC[i-1].name;
+      if (perfectMask & (1 << (i - 1))) b.classList.add('perfect');
     } else if (i === unlockedCount + 1) {
       b.classList.add('next');
       b.textContent = i;
@@ -510,11 +576,19 @@ document.getElementById('pauseBtn').addEventListener('click', () => {
 });
 document.getElementById('nextBtn').addEventListener('click', () =>
   startGame(Math.min(currentLevel + 1, 10)));
-document.getElementById('resetLink').addEventListener('click', e => {
-  e.preventDefault();
-  if (confirm('Start over and lock all the magic again?')) {
-    unlockedCount = 0; saveProgress(); refreshTitle();
-  }
+function hideResetConfirm() {
+  document.getElementById('resetConfirm').classList.add('hidden');
+  document.getElementById('resetLink').classList.remove('hidden');
+}
+document.getElementById('resetLink').addEventListener('click', () => {
+  document.getElementById('resetLink').classList.add('hidden');
+  document.getElementById('resetConfirm').classList.remove('hidden');
+});
+document.getElementById('resetNo').addEventListener('click', hideResetConfirm);
+document.getElementById('resetYes').addEventListener('click', () => {
+  unlockedCount = 0; perfectMask = 0; saveProgress();
+  hideResetConfirm();
+  refreshTitle();
 });
 
 function updateHud() {
@@ -543,26 +617,40 @@ function startRescue() {
 function startWin() {
   if (state === 'win') return;
   state = 'win';
-  winT = 0; confettiTimer = 0;
+  winT = 0; confettiTimer = 0; fwTimer = 0;
   rainbow = true;
   winWasNew = currentLevel > unlockedCount;
-  if (winWasNew) { unlockedCount = currentLevel; saveProgress(); }
-  sWin();
+  if (winWasNew) unlockedCount = currentLevel;
+  if (stars.length > 0 && got >= stars.length) perfectMask |= 1 << (currentLevel - 1);
+  saveProgress();
+  finale = currentLevel === 10;
+  if (finale) {
+    finaleStart = {x: player.x, y: player.y};
+    finaleTrail.length = 0;
+    sFinale();
+  } else {
+    sWin();
+  }
 }
 
 function showWinCard() {
   const m = MAGIC[currentLevel - 1];
-  const finale = currentLevel === 10;
+  const perfect = stars.length > 0 && got >= stars.length;
   document.getElementById('winEmoji').textContent = finale ? '🔮' : '🌈';
-  document.getElementById('winTitle').textContent =
-    finale ? 'ALL the magic is back!' : 'Level ' + currentLevel + ' complete!';
+  const wt = document.getElementById('winTitle');
+  wt.textContent = finale ? 'ALL the magic is back!' : 'Level ' + currentLevel + ' complete!';
+  wt.classList.toggle('rainbowtext', finale);
+  document.getElementById('winDance').classList.toggle('hidden', !finale);
   document.getElementById('winMsg').innerHTML =
     (finale ? 'Lily is the most magical unicorn ever! 🦄<br>' : '') +
-    'You collected <b>' + got + '</b> stars! ⭐';
+    'You collected <b>' + got + '</b> stars! ⭐' +
+    (perfect ? '<br>🌟 <b>PERFECT!</b> You found every star!' : '');
   document.getElementById('unlockBox').textContent =
     (winWasNew ? 'New magic: ' : 'Your magic: ') + m.icon + ' ' + m.name;
+  document.getElementById('unlockTip').textContent = winWasNew ? m.tip : '';
   document.getElementById('nextBtn').classList.toggle('hidden', finale);
   document.getElementById('mapBtn').textContent = finale ? '🦄 Choose a level' : '🗺️ Choose a level';
+  if (perfect) sPerfect();
   document.getElementById('winScreen').classList.remove('hidden');
 }
 
@@ -574,7 +662,8 @@ function update(dt, t) {
     if (p.amp) p.y = p.baseY + Math.sin(t * p.spd + p.ph) * p.amp;
   }
 
-  if (state === 'play' || state === 'win') {
+  const finaleFly = state === 'win' && finale && winT > 0.8;
+  if (state === 'play' || (state === 'win' && !finaleFly)) {
     // ride a moving platform
     if (player.stand && player.onGround) player.y += player.stand.y - player.stand.prevY;
 
@@ -610,6 +699,18 @@ function update(dt, t) {
     player.vy += GRAV * dt;
     if (player.vy > 950) player.vy = 950;
 
+    // Magic Wings: hold jump while falling to glide gently down
+    player.gliding = false;
+    if (hasMagic(6) && state === 'play' && !player.onGround && player.vy > 0 && keys.j) {
+      player.gliding = true;
+      player.vy = Math.min(player.vy, 130);
+      if (Math.random() < dt * 14) {
+        spawn({x: player.x - player.facing * 8, y: player.y - 6,
+               vx: -player.facing * 40, vy: 20 + Math.random() * 30,
+               size: 2.5, color: '#ffd6ee', life: 0.6, type: 'star'});
+      }
+    }
+
     const prevFeet = player.y + player.hh;
     player.x += player.vx * dt;
     player.y += player.vy * dt;
@@ -639,6 +740,20 @@ function update(dt, t) {
                 color: glitter ? PASTELS[(Math.random()*PASTELS.length)|0] : '#e8d6ff',
                 life: 0.4, type: glitter ? 'star' : 'dot'
               }));
+            }
+            // trampoline flowers: land on one and BOING!
+            for (const f of flowers) {
+              if (f.p === p && Math.abs(player.x - f.x) < 26) {
+                player.vy = -1050; player.onGround = false; player.stand = null;
+                player.squash = -0.5; player.flut = 0;
+                f.bt = t; sBoing();
+                burst(f.x, p.y - 26, 8, () => ({
+                  x: f.x + Math.random()*24-12, y: p.y - 26,
+                  vx: Math.random()*160-80, vy: -(60 + Math.random()*120), g: 400,
+                  size: 3, color: f.col, life: 0.8
+                }));
+                break;
+              }
             }
             break;
           }
@@ -708,7 +823,6 @@ function update(dt, t) {
   if (state === 'win') {
     winT += dt;
     confettiTimer -= dt;
-    const finale = currentLevel === 10;
     if (winT < (finale ? 6 : 3.5) && confettiTimer <= 0) {
       confettiTimer = finale ? 0.15 : 0.25;
       burst(crystal.x, crystal.y - 40, finale ? 16 : 10, () => ({
@@ -718,7 +832,52 @@ function update(dt, t) {
         life: 2.4, type:'conf'
       }));
     }
-    if (winT > 2.2 && !winShown) {
+    if (finale) {
+      // fireworks!
+      fwTimer -= dt;
+      if (winT > 0.6 && winT < 6 && fwTimer <= 0) {
+        fwTimer = 0.5;
+        const fx = camX + 60 + Math.random() * Math.max(100, viewW - 120);
+        const fy = 60 + Math.random() * 180;
+        const col = PASTELS[(Math.random()*PASTELS.length)|0];
+        sPop();
+        burst(fx, fy, 22, i => {
+          const a = i / 22 * Math.PI * 2, sp = 90 + Math.random() * 130;
+          return {x: fx, y: fy, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+                  g: 110, size: 3, color: col, life: 1.3, type: 'star'};
+        });
+      }
+      // gentle star rain
+      if (winT > 1 && winT < 6 && Math.random() < dt * 8) {
+        spawn({x: camX + Math.random() * viewW, y: -20,
+               vy: 90 + Math.random() * 80, vx: Math.random()*30-15, g: 60,
+               size: 3 + Math.random()*2, color: Math.random() < 0.5 ? '#ffd94d' : '#fff',
+               life: 3, type: 'star'});
+      }
+      // Lily's victory flight: rise, loop-the-loop, then hover
+      if (winT > 0.8) {
+        const u = winT - 0.8;
+        const cx = crystal.x - 80, cy = 220;
+        let nx, ny;
+        if (u < 1) {
+          nx = lerp(finaleStart.x, cx, ease(u));
+          ny = lerp(finaleStart.y, cy + 105, ease(u));
+        } else if (u < 3) {
+          const a = Math.PI / 2 + (u - 1) * Math.PI;
+          nx = cx + Math.cos(a) * 140;
+          ny = cy + Math.sin(a) * 105;
+        } else {
+          nx = cx + Math.sin((u - 3) * 1.6) * 36;
+          ny = cy - 30 + Math.sin((u - 3) * 2.3) * 14;
+        }
+        player.facing = nx >= player.x ? 1 : -1;
+        player.x = nx; player.y = ny;
+        player.gliding = true;
+        finaleTrail.push({x: nx, y: ny + 10});
+        if (finaleTrail.length > 80) finaleTrail.shift();
+      }
+    }
+    if (winT > (finale ? 6.5 : 2.2) && !winShown) {
       winShown = true;
       showWinCard();
     }
@@ -760,6 +919,18 @@ function update(dt, t) {
     cloudGone.y -= dt * 60;
     cloudGone.x -= dt * 40;
     if (cloudGone.t > 1) cloudGone = null;
+  }
+
+  // a friendly lava fish leaps now and then
+  nextFishT -= dt;
+  if (!fish && nextFishT <= 0 && state !== 'title') {
+    fish = {x0: camX + 80 + Math.random() * Math.max(100, viewW - 160),
+            t0: t, dur: 1.15, dir: Math.random() < 0.5 ? -1 : 1};
+    tone(300, 0.12, 'sine', 0.05, 0, 520);
+  }
+  if (fish && t - fish.t0 > fish.dur) {
+    fish = null;
+    nextFishT = 3 + Math.random() * 5;
   }
 
   // embers over the lava
@@ -1163,6 +1334,108 @@ function drawCrystal(t) {
   }
 }
 
+function drawFlowers(t) {
+  setLayer(1);
+  for (const f of flowers) {
+    if (f.x < camX - 40 || f.x > camX + viewW + 40) continue;
+    const p = f.p;
+    const sq = clamp(1 - (t - f.bt) / 0.4, 0, 1);   // squish right after a bounce
+    ctx.save();
+    ctx.translate(f.x, p.y - 6);
+    ctx.scale(1 + sq * 0.3, 1 - sq * 0.45);
+    ctx.strokeStyle = '#4fae5f'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(2, -10, 0, -18); ctx.stroke();
+    ctx.fillStyle = '#5fc06f';
+    ctx.beginPath(); ctx.ellipse(-6, -7, 6, 2.6, -0.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(6, -5, 6, 2.6, 0.5, 0, 7); ctx.fill();
+    const wob = Math.sin(t * 2 + f.x) * 0.08;
+    ctx.rotate(wob);
+    ctx.fillStyle = f.col;
+    for (let i = 0; i < 6; i++) {
+      const a = i * Math.PI / 3;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a) * 9, -25 + Math.sin(a) * 9, 6.5, 4.5, a, 0, 7);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#ffdf6b';
+    ctx.beginPath(); ctx.arc(0, -25, 6.5, 0, 7); ctx.fill();
+    ctx.fillStyle = '#c98a2b';
+    ctx.beginPath(); ctx.arc(-2, -26, 1, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(2, -26, 1, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#c98a2b'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.arc(0, -24, 2.6, 0.3, Math.PI - 0.3); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawFish(t) {
+  if (!fish) return;
+  const u = (t - fish.t0) / fish.dur;
+  if (u < 0 || u > 1) return;
+  setLayer(1);
+  const fx = fish.x0 + (u - 0.5) * 90 * fish.dir;
+  const fy = LAVA_Y + 12 - Math.sin(u * Math.PI) * 95;
+  ctx.save();
+  ctx.translate(fx, fy);
+  ctx.scale(fish.dir, 1);
+  ctx.rotate((u - 0.5) * 1.6);
+  ctx.fillStyle = '#ff8a3c';
+  ctx.beginPath(); ctx.ellipse(0, 0, 14, 8, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-20, -7); ctx.lineTo(-20, 7); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffc24d';
+  ctx.beginPath(); ctx.ellipse(2, -7, 5, 3, 0.6, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(7, -2, 3, 0, 7); ctx.fill();
+  ctx.fillStyle = '#3a2b4d';
+  ctx.beginPath(); ctx.arc(8, -2, 1.5, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#d95f1f'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(10, 2, 2.5, 0.4, 1.8); ctx.stroke();
+  ctx.restore();
+  if (Math.random() < 0.4) {
+    spawn({x: fx, y: fy + 6, vy: 120, vx: 0, g: 300, size: 2, color: '#ff8a3c', life: 0.5});
+  }
+}
+
+function drawFinaleFx() {
+  if (!(state === 'win' && finale)) return;
+  setLayer(1);
+  for (let i = 0; i < 3; i++) {
+    const rt = winT - i * 0.18;
+    if (rt < 0 || rt > 1.4) continue;
+    ctx.globalAlpha = Math.max(0, 0.8 - rt * 0.6);
+    ctx.lineWidth = 10 - i * 2;
+    ctx.strokeStyle = 'hsl(' + ((winT * 200 + i * 60) % 360) + ',95%,70%)';
+    ctx.beginPath(); ctx.arc(crystal.x, crystal.y, rt * 520 + 4, 0, 7); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawFinaleTrail() {
+  if (!(state === 'win' && finale) || finaleTrail.length < 2) return;
+  setLayer(1);
+  const RB = ['#ff5f5f','#ffb14d','#ffe94d','#6fdc6f','#5fb8ff','#b38fff'];
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.65;
+  for (let c = 0; c < 6; c++) {
+    ctx.strokeStyle = RB[c];
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    for (let i = 0; i < finaleTrail.length; i++) {
+      const q = finaleTrail[i], off = (c - 2.5) * 4.5;
+      i ? ctx.lineTo(q.x, q.y + off) : ctx.moveTo(q.x, q.y + off);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawFinaleFlash() {
+  if (!(state === 'win' && finale) || winT > 0.5) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,' + (0.85 * (1 - winT / 0.5)).toFixed(3) + ')';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function drawLava(t) {
   setLayer(1);
   const x0 = camX - 20, x1 = camX + viewW + 20;
@@ -1198,19 +1471,21 @@ function drawLava(t) {
   }
 }
 
-function drawWingFan(col) {
+function drawWingFan(col, edge) {
   for (let i = 0; i < 3; i++) {
     ctx.save();
-    ctx.rotate(-1.15 + i * 0.32);
+    ctx.rotate(-1.05 + i * 0.38);
     ctx.fillStyle = col;
-    ctx.beginPath(); ctx.ellipse(0, -11, 4.2, 12, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -13, 5.5, 17 - i * 2.5, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = edge; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.ellipse(0, -13, 5.5, 17 - i * 2.5, 0, 0, 7); ctx.stroke();
     ctx.restore();
   }
 }
 
 function drawUnicorn(x, y, t, opts) {
   const o = Object.assign({facing:1, anim:0, onGround:true, vy:0, squash:0, rainbow:false, sitting:false,
-                           wings:false, crown:false, fullMagic:false}, opts);
+                           wings:false, crown:false, fullMagic:false, gliding:false}, opts);
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(o.facing, 1);
@@ -1262,11 +1537,14 @@ function drawUnicorn(x, y, t, opts) {
   leg(-12, 7, Math.PI, '#efe2ff');      // far back
   leg(10, 7, Math.PI * 0.5, '#efe2ff'); // far front
 
-  // far wing (Magic Wings)
-  const wingFlap = o.onGround && !o.sitting ? -0.25 : (-0.55 + Math.sin(t * 11) * 0.4);
+  // wings (Magic Wings): spread wide when gliding, flap in the air
+  let wingA, wingS;
+  if (o.gliding) { wingA = -1.3 + Math.sin(t * 5) * 0.07; wingS = 1.35; }
+  else if (!o.onGround && !o.sitting) { wingA = -0.6 + Math.sin(t * 11) * 0.5; wingS = 1.1; }
+  else { wingA = -0.05 + Math.sin(t * 2) * 0.05; wingS = 0.95; }
   if (o.wings) {
-    ctx.save(); ctx.translate(-3, -9); ctx.rotate(wingFlap + 0.3); ctx.scale(0.85, 0.85);
-    drawWingFan('#e9defc');
+    ctx.save(); ctx.translate(-4, -9); ctx.rotate(wingA + 0.35); ctx.scale(wingS * 0.9, wingS * 0.9);
+    drawWingFan('#f2e6ff', 'rgba(190,150,230,0.9)');
     ctx.restore();
   }
 
@@ -1278,8 +1556,8 @@ function drawUnicorn(x, y, t, opts) {
 
   // near wing (Magic Wings)
   if (o.wings) {
-    ctx.save(); ctx.translate(1, -8); ctx.rotate(wingFlap);
-    drawWingFan('#ffffff');
+    ctx.save(); ctx.translate(2, -8); ctx.rotate(wingA); ctx.scale(wingS, wingS);
+    drawWingFan('#ffe1f1', 'rgba(240,130,190,0.85)');
     ctx.restore();
   }
 
@@ -1411,9 +1689,12 @@ function render(t) {
   if (rainbow) drawRainbow();
   drawPlatforms(t);
   drawSign();
+  drawFlowers(t);
   drawCrystal(t);
   drawStars(t);
   drawButterflies(t);
+  drawFinaleFx();
+  drawFinaleTrail();
 
   setLayer(1);
   const magicOpts = {
@@ -1421,6 +1702,7 @@ function render(t) {
     wings: hasMagic(6),
     crown: hasMagic(9),
     fullMagic: hasMagic(10),
+    gliding: !!player.gliding && state !== 'rescue',
   };
   if (state === 'rescue') {
     if (rescueT >= 0.4) {
@@ -1435,8 +1717,10 @@ function render(t) {
   }
   if (cloudGone) drawCloud(cloudGone.x, cloudGone.y, 1, 1 - cloudGone.t);
 
+  drawFish(t);
   drawLava(t);
   drawParticles();
+  drawFinaleFlash();
 }
 
 // ---------- main loop ----------
