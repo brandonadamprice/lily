@@ -6,98 +6,183 @@
 <title>Unicorn Quest: The Lost Magic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..600&family=Pacifico&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; overflow: hidden; background: #2a1040; height: 100%; }
-  /* Pinned so every device matches: rounded for reading, script for titles.
+  /* Pinned so every device matches: bubbly rounded for reading, script for titles.
      The old system stack stays as an offline fallback. */
   body {
-    font-family: 'Baloo 2', 'Comic Sans MS', 'Chalkboard SE', 'Segoe Print', cursive, sans-serif;
+    font-family: 'Fredoka', 'Baloo 2', 'Comic Sans MS', 'Chalkboard SE', 'Segoe Print', cursive, sans-serif;
+    font-weight: 500; letter-spacing: .2px;
     user-select: none;
   }
   .card h1, .card h2 {
     font-family: 'Pacifico', 'Chalkboard SE', 'Comic Sans MS', cursive;
+    font-weight: 400;
     line-height: 1.3;
   }
+  ::selection { background: #ffc9e8; color: #7a2f8f; }
   canvas { display: block; }
 
+  /* ---------- HUD: little frosted candy pills ---------- */
   #hud {
     position: fixed; top: 14px; left: 16px; z-index: 5;
-    font-size: 28px; color: #fff; text-shadow: 0 2px 6px rgba(60,0,60,.6);
+    display: flex; gap: 8px; align-items: center;
     pointer-events: none;
   }
+  #hud .pill {
+    font-size: 22px; font-weight: 600; color: #b0299c;
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,222,242,.92));
+    border: 2px solid rgba(255,255,255,.95);
+    border-radius: 999px; padding: 3px 16px 5px;
+    box-shadow: 0 5px 16px rgba(120,0,90,.28);
+  }
+
   #mute, #pauseBtn {
     position: fixed; top: 12px; right: 14px; z-index: 5;
-    width: 54px; height: 54px; border-radius: 50%; border: none;
-    background: rgba(255,255,255,.3); font-size: 26px; cursor: pointer;
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.85);
+    background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,186,224,.45));
+    font-size: 26px; cursor: pointer;
+    box-shadow: 0 5px 14px rgba(120,0,90,.25);
   }
   #pauseBtn { right: 78px; }
   #mute:active, #pauseBtn:active { transform: scale(.92); }
 
   .touchbtn {
     position: fixed; bottom: 20px; z-index: 5;
-    border: none; border-radius: 50%;
-    background: rgba(255,255,255,.30); color: #fff;
-    font-size: 34px; text-shadow: 0 2px 4px rgba(60,0,60,.5);
+    border: 3px solid rgba(255,255,255,.8); border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(203,163,255,.42));
+    color: #fff; font-size: 34px; text-shadow: 0 2px 4px rgba(60,0,60,.5);
     width: 78px; height: 78px; cursor: pointer; touch-action: none;
+    box-shadow: 0 6px 16px rgba(80,0,80,.28), inset 0 6px 12px rgba(255,255,255,.45);
   }
-  .touchbtn:active { background: rgba(255,255,255,.55); }
+  .touchbtn:active { background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(203,163,255,.6)); transform: scale(.94); }
   #btnL { left: 20px; }
   #btnR { left: 112px; }
-  #btnJ { right: 20px; width: 96px; height: 96px; font-size: 44px; background: rgba(255,182,230,.45); }
+  #btnJ {
+    right: 20px; width: 96px; height: 96px; font-size: 44px;
+    background: linear-gradient(180deg, rgba(255,214,238,.7), rgba(255,143,200,.55));
+    animation: jglow 2.4s ease-in-out infinite;
+  }
+  @keyframes jglow {
+    0%,100% { box-shadow: 0 6px 16px rgba(80,0,80,.28), inset 0 6px 12px rgba(255,255,255,.45), 0 0 0 0 rgba(255,150,215,0); }
+    50%     { box-shadow: 0 6px 16px rgba(80,0,80,.28), inset 0 6px 12px rgba(255,255,255,.45), 0 0 24px 5px rgba(255,150,215,.45); }
+  }
 
+  /* ---------- overlays ---------- */
   .overlay {
     position: fixed; inset: 0; z-index: 10;
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(180deg, rgba(90,40,140,.55), rgba(40,10,70,.65));
+    background: linear-gradient(180deg, rgba(150,70,180,.55), rgba(55,12,88,.68));
   }
+  /* floating hearts + sparkles drifting up behind the card */
+  .sprinkles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .sprinkles span {
+    position: absolute; bottom: -50px; opacity: 0;
+    animation-name: floatUp; animation-timing-function: linear; animation-iteration-count: infinite;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) rotate(-12deg) scale(.75); opacity: 0; }
+    12%  { opacity: .85; }
+    85%  { opacity: .85; }
+    100% { transform: translateY(-106vh) rotate(16deg) scale(1.1); opacity: 0; }
+  }
+
   .card {
-    background: linear-gradient(180deg, #fff5fb, #ffe3f3);
-    border-radius: 28px; padding: 24px 40px; text-align: center;
-    box-shadow: 0 18px 60px rgba(30,0,50,.45);
+    position: relative;
+    background-image:
+      radial-gradient(rgba(255,180,222,.4) 1.7px, transparent 1.8px),
+      linear-gradient(180deg, #fff7fc, #ffe6f5);
+    background-size: 22px 22px, 100% 100%;
+    border: 4px solid #fff;
+    border-radius: 34px; padding: 26px 40px; text-align: center;
+    box-shadow: 0 0 0 5px rgba(255,178,222,.85),
+                0 18px 60px rgba(30,0,50,.45),
+                0 0 70px rgba(255,150,215,.3);
     max-width: min(640px, 94vw); max-height: 94vh; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: #ffb2de transparent;
   }
-  .card h1 { margin: 4px 0 0; font-size: 40px; color: #b0299c; }
-  .card h2 { margin: 2px 0 10px; font-size: 22px; color: #7a4fd0; }
-  .card p  { font-size: 19px; color: #5a4670; margin: 8px 0 14px; }
-  .bigmoji { font-size: 64px; animation: bounce 1.6s ease-in-out infinite; display: inline-block; }
+  .card::-webkit-scrollbar { width: 10px; }
+  .card::-webkit-scrollbar-track { background: transparent; }
+  .card::-webkit-scrollbar-thumb {
+    background: #ffb2de; border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  .card h1 {
+    margin: 4px 0 0; font-size: 42px;
+    background: linear-gradient(180deg, #ff7ec4 0%, #d02c9e 55%, #a92bb0 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 0 rgba(255,255,255,.9)) drop-shadow(0 5px 10px rgba(200,40,150,.3));
+  }
+  .card h2 { margin: 2px 0 10px; font-size: 22px; color: #8a5fd0; }
+  .card p  { font-size: 19px; line-height: 1.5; color: #6b5385; margin: 8px 0 14px; }
+  .bigmoji {
+    font-size: 66px; display: inline-block; position: relative;
+    animation: bounce 1.6s ease-in-out infinite;
+    filter: drop-shadow(0 6px 10px rgba(190,60,150,.3));
+  }
+  .bigmoji::before, .bigmoji::after {
+    content: '✨'; position: absolute; font-size: 22px; filter: none;
+    animation: twinkle 1.9s ease-in-out infinite;
+  }
+  .bigmoji::before { left: -28px; top: 8px; }
+  .bigmoji::after  { right: -28px; top: 22px; animation-delay: .95s; }
+  @keyframes twinkle { 0%,100% { transform: scale(.6) rotate(-12deg); opacity: .35; }
+                       50%     { transform: scale(1.1) rotate(12deg);  opacity: 1; } }
   @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
   .playbtn {
-    font-family: inherit; font-size: 26px; color: #fff; cursor: pointer;
-    background: linear-gradient(180deg, #ff8fc8, #f453a4);
-    border: none; border-radius: 999px; padding: 14px 38px;
+    position: relative; overflow: hidden;
+    font-family: inherit; font-weight: 600; font-size: 26px; color: #fff; cursor: pointer;
+    background: linear-gradient(180deg, #ffa3d6, #f453a4);
+    border: 3px solid #fff; border-radius: 999px; padding: 14px 40px;
+    text-shadow: 0 2px 3px rgba(160,20,100,.35);
     box-shadow: 0 8px 0 #c22c7c, 0 14px 28px rgba(190,40,120,.4);
   }
+  .playbtn::after {   /* candy shine sweeping across */
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+    animation: shine 3.6s ease-in-out infinite;
+  }
+  @keyframes shine { 0% { left: -60%; } 45%, 100% { left: 130%; } }
   .playbtn:active { transform: translateY(6px); box-shadow: 0 2px 0 #c22c7c; }
   .smallbtn {
-    font-family: inherit; font-size: 18px; cursor: pointer;
-    background: #fff; border: 2px solid #f0a8d0; color: #c22c7c;
-    border-radius: 999px; padding: 10px 24px; margin-top: 12px;
+    font-family: inherit; font-weight: 500; font-size: 18px; cursor: pointer;
+    background: #fff; border: 2.5px dashed #ffaed8; color: #c22c7c;
+    border-radius: 999px; padding: 10px 24px; margin: 12px 4px 0;
+    box-shadow: 0 3px 0 rgba(255,174,216,.45);
   }
   .smallbtn:active { transform: scale(.95); }
-  .keys { font-size: 15px; color: #8a76a8; margin-top: 14px; }
+  .keys { font-size: 15px; color: #9a7fb8; margin-top: 14px; }
   .hidden { display: none !important; }
 
   .levelmap {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
-    margin: 16px auto 2px; max-width: 350px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    margin: 18px auto 2px; max-width: 380px; padding: 14px 12px;
+    border-radius: 26px; background: rgba(255,255,255,.55);
+    border: 2.5px dashed #ffc3e6;
   }
   .lvlbtn {
-    width: 58px; height: 58px; border-radius: 50%; border: none;
-    font-size: 22px; font-family: inherit; cursor: pointer;
-    box-shadow: 0 4px 0 rgba(160,60,120,.25);
+    width: 100%; max-width: 58px; aspect-ratio: 1 / 1; justify-self: center;
+    border-radius: 50%; border: 3px solid #fff;
+    font-size: 22px; font-family: inherit; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 0 rgba(200,90,160,.25), 0 6px 12px rgba(190,60,150,.18);
     position: relative;
   }
   .lvlbtn.perfect::after {
-    content: '⭐'; position: absolute; top: -8px; right: -8px; font-size: 16px;
+    content: '⭐'; position: absolute; top: -10px; right: -10px; font-size: 16px;
+    filter: drop-shadow(0 1px 2px rgba(180,120,0,.5));
   }
   .lvlbtn:active { transform: translateY(3px); box-shadow: none; }
-  .lvlbtn.done   { background: linear-gradient(180deg, #ffe9a8, #ffd353); }
-  .lvlbtn.next   { background: linear-gradient(180deg, #ff8fc8, #f453a4); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
-  .lvlbtn.locked { background: #e8dff2; color: #b5a8c9; box-shadow: none; cursor: default; }
+  .lvlbtn.done   { background: linear-gradient(180deg, #fff0bd, #ffd353); }
+  .lvlbtn.next   { background: linear-gradient(180deg, #ffa3d6, #f453a4); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+  .lvlbtn.locked {
+    background: linear-gradient(180deg, #f6effc, #e6dcf4); color: #c3b5d6;
+    border-color: rgba(255,255,255,.75); box-shadow: none; cursor: default;
+  }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-  .mapcap { font-size: 15px; color: #8a76a8; margin-top: 10px; }
+  .mapcap { font-size: 15px; color: #9a7fb8; margin-top: 10px; }
 
   .card .rainbowtext {
     background: linear-gradient(90deg, #ff5f5f,#ffb14d,#ffe94d,#6fdc6f,#5fb8ff,#b38fff,#ff5f5f);
@@ -110,13 +195,19 @@
   #winDance span { display: inline-block; animation: bounce 0.8s ease-in-out infinite; }
   #winDance span:nth-child(2) { animation-delay: .15s; }
   #winDance span:nth-child(3) { animation-delay: .3s; }
-  #unlockTip { font-size: 17px; color: #8a76a8; margin: -4px 0 10px; }
+  #unlockTip { font-size: 17px; color: #9a7fb8; margin: -4px 0 10px; }
 
   #unlockBox {
-    font-size: 23px; color: #7a2f8f;
-    background: linear-gradient(180deg, #fff7d6, #ffe9a8);
+    font-size: 23px; font-weight: 600; color: #7a2f8f;
+    background: linear-gradient(180deg, #fffbe6, #ffe9a8);
+    border: 3px solid #fff;
     border-radius: 999px; padding: 12px 28px; display: inline-block;
     margin: 4px 0 14px; box-shadow: 0 0 26px rgba(255,210,80,.8);
+    animation: sparklebox 2.6s ease-in-out infinite;
+  }
+  @keyframes sparklebox {
+    0%,100% { box-shadow: 0 0 20px rgba(255,210,80,.6); transform: scale(1); }
+    50%     { box-shadow: 0 0 34px rgba(255,190,230,.95); transform: scale(1.03); }
   }
   .tiny { margin-top: 12px; font-size: 13px; }
   .tiny .smallbtn { font-size: 14px; padding: 7px 16px; }
@@ -126,17 +217,46 @@
   #toast {
     position: fixed; top: 84px; left: 50%; transform: translateX(-50%);
     z-index: 5; pointer-events: none;
-    background: rgba(255,255,255,.85); color: #7a4fd0;
-    font-size: 20px; padding: 10px 24px; border-radius: 999px;
-    box-shadow: 0 6px 18px rgba(60,0,80,.25);
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,229,246,.92));
+    border: 2.5px solid rgba(255,255,255,.95);
+    color: #a13a9c; font-weight: 500;
+    font-size: 20px; padding: 10px 26px; border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(60,0,80,.28);
     opacity: 0; transition: opacity .6s;
+  }
+
+  /* small phones: let the card breathe instead of overflowing */
+  @media (max-width: 470px) {
+    .card { padding: 20px 16px; border-radius: 28px; }
+    .card h1 { font-size: 34px; }
+    .card h2 { font-size: 19px; }
+    .card p  { font-size: 17px; }
+    .bigmoji { font-size: 54px; }
+    .playbtn { font-size: 23px; padding: 13px 30px; }
+    .levelmap { gap: 8px; padding: 12px 8px; max-width: 100%; }
+    .lvlbtn { font-size: 20px; }
+  }
+
+  /* while a card is up, the play controls politely fade back */
+  #hud, .touchbtn { transition: opacity .35s ease; }
+  body:has(.overlay:not(.hidden)) #hud,
+  body:has(.overlay:not(.hidden)) .touchbtn { opacity: 0; pointer-events: none; }
+  body:has(.overlay:not(.hidden)) #toast { visibility: hidden; }
+
+  /* be kind to anyone who asked for less motion */
+  @media (prefers-reduced-motion: reduce) {
+    .sprinkles, .playbtn::after { display: none; }
+    .bigmoji, .bigmoji::before, .bigmoji::after, #btnJ, #unlockBox, .lvlbtn.next { animation: none; }
   }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 
-<div id="hud">🦄 Level <span id="levelNum">1</span> &nbsp;&nbsp; ⭐ <span id="starCount">0 / 0</span></div>
+<div id="hud">
+  <span class="pill">🦄 Level <span id="levelNum">1</span></span>
+  <span class="pill">⭐ <span id="starCount">0 / 0</span></span>
+</div>
 <button id="mute" title="Sound on/off">🔊</button>
 <button id="pauseBtn" title="Pause (Esc)">⏸️</button>
 
@@ -558,6 +678,25 @@ function spawn(o) {
 function burst(x, y, n, mk) { for (let i = 0; i < n; i++) spawn(mk(i)); }
 
 const PASTELS = ['#ff8fc8','#ffd94d','#8fd8ff','#b28fff','#8fffb0','#ffb28f'];
+const PINKS   = ['#ff8fc8','#ff6fb5','#ffb3dd','#ff9ecf','#ffc2e6'];
+const pinkOne = () => PINKS[(Math.random()*PINKS.length)|0];
+
+// ---------- floating hearts + sparkles behind the cards (pure decoration) ----------
+const SPRINKLES = ['💖','✨','🌸','⭐','🦄','🎀','💜','🌟','🩷','💫'];
+for (const ov of document.querySelectorAll('.overlay')) {
+  const layer = document.createElement('div');
+  layer.className = 'sprinkles';
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement('span');
+    s.textContent = SPRINKLES[(Math.random() * SPRINKLES.length) | 0];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.fontSize = (13 + Math.random() * 20) + 'px';
+    s.style.animationDuration = (9 + Math.random() * 10) + 's';
+    s.style.animationDelay = (-Math.random() * 16) + 's';   // negative = already drifting
+    layer.appendChild(s);
+  }
+  ov.insertBefore(layer, ov.firstChild);
+}
 
 // ---------- flow ----------
 function refreshTitle() {
@@ -751,12 +890,16 @@ function update(dt, t) {
       } else if (player.flut < maxFlut()) {
         player.vy = -FLUT_V; player.flut++; jumpBuf = 0;
         sFlutter();
-        burst(player.x, player.y + 10, 10, () => ({
-          x: player.x + (Math.random()*40-20), y: player.y + 14,
-          vx: Math.random()*80-40, vy: 40 + Math.random()*80,
-          size: 3 + Math.random()*3, color: PASTELS[(Math.random()*PASTELS.length)|0],
-          life: 0.6, type:'star'
-        }));
+        burst(player.x, player.y + 10, 10, () => {
+          const heart = Math.random() < 0.35;
+          return {
+            x: player.x + (Math.random()*40-20), y: player.y + 14,
+            vx: Math.random()*80-40, vy: 40 + Math.random()*80,
+            size: 3 + Math.random()*3,
+            color: heart ? pinkOne() : PASTELS[(Math.random()*PASTELS.length)|0],
+            life: 0.6, type: heart ? 'heart' : 'star'
+          };
+        });
       }
     }
 
@@ -829,11 +972,12 @@ function update(dt, t) {
     if (player.onGround && Math.abs(player.vx) > 120) {
       const rate = hasMagic(8) ? 30 : hasMagic(1) ? 16 : 7;
       if (Math.random() < dt * rate) {
+        const heart = hasMagic(1) && Math.random() < 0.3;
         spawn({x: player.x - player.facing*20, y: player.y + 16,
                vx: -player.facing*30, vy: -20 - Math.random()*30,
                size: hasMagic(8) ? 3.5 : 2.5,
-               color: hasMagic(1) ? PASTELS[(Math.random()*PASTELS.length)|0] : '#fff',
-               life: 0.5, type:'star'});
+               color: heart ? pinkOne() : hasMagic(1) ? PASTELS[(Math.random()*PASTELS.length)|0] : '#fff',
+               life: 0.5, type: heart ? 'heart' : 'star'});
       }
     }
 
@@ -848,12 +992,16 @@ function update(dt, t) {
         }
         if (d2 < 46*46) {
           s.taken = true; got++; updateHud(); sStar();
-          burst(s.x, s.y, 12, () => ({
-            x: s.x, y: s.y,
-            vx: Math.random()*220-110, vy: Math.random()*220-110,
-            size: 3 + Math.random()*3, color: Math.random() < 0.5 ? '#ffd94d' : '#fff3b0',
-            life: 0.7, type:'star'
-          }));
+          burst(s.x, s.y, 12, () => {
+            const heart = Math.random() < 0.25;
+            return {
+              x: s.x, y: s.y,
+              vx: Math.random()*220-110, vy: Math.random()*220-110,
+              size: 3 + Math.random()*3,
+              color: heart ? pinkOne() : Math.random() < 0.5 ? '#ffd94d' : '#fff3b0',
+              life: 0.7, type: heart ? 'heart' : 'star'
+            };
+          });
         }
       }
       // reach the crystal!
@@ -889,12 +1037,16 @@ function update(dt, t) {
     confettiTimer -= dt;
     if (winT < (finale ? 6 : 3.5) && confettiTimer <= 0) {
       confettiTimer = finale ? 0.15 : 0.25;
-      burst(crystal.x, crystal.y - 40, finale ? 16 : 10, () => ({
-        x: crystal.x + Math.random()*340-170, y: crystal.y - 140 - Math.random()*120,
-        vx: Math.random()*120-60, vy: Math.random()*40, g: 260,
-        size: 4, color: PASTELS[(Math.random()*PASTELS.length)|0],
-        life: 2.4, type:'conf'
-      }));
+      burst(crystal.x, crystal.y - 40, finale ? 16 : 10, () => {
+        const heart = Math.random() < 0.35;
+        return {
+          x: crystal.x + Math.random()*340-170, y: crystal.y - 140 - Math.random()*120,
+          vx: Math.random()*120-60, vy: Math.random()*40, g: heart ? 130 : 260,
+          size: heart ? 5 : 4,
+          color: heart ? pinkOne() : PASTELS[(Math.random()*PASTELS.length)|0],
+          life: 2.4, type: heart ? 'heart' : 'conf'
+        };
+      });
     }
     if (finale) {
       // fireworks!
@@ -1550,14 +1702,19 @@ function drawSkySparkles(t) {
   const off = camX * 0.7;
   const k0 = Math.floor(off / 240) - 1;
   const n = Math.ceil(viewW / 240) + 2;
-  ctx.fillStyle = '#fff';
   for (let i = 0; i < n; i++) {
     const k = k0 + i;
     const sx = k * 240 + hash(k * 31) * 180;
     const sy = 40 + hash(k * 37) * 250;
     const tw = 0.5 + 0.5 * Math.sin(t * 2.5 + k * 2.7);
     ctx.globalAlpha = 0.25 + 0.45 * tw;
-    starPath(sx, sy, 2.5 + 2 * tw); ctx.fill();
+    if (hash(k * 41) < 0.34) {                       // a heart drifting in the sky
+      ctx.fillStyle = '#ffd6ee';
+      heartPath(sx, sy + Math.sin(t * 1.2 + k) * 3, 2.6 + 1.8 * tw); ctx.fill();
+    } else {
+      ctx.fillStyle = '#fff';
+      starPath(sx, sy, 2.5 + 2 * tw); ctx.fill();
+    }
   }
   ctx.globalAlpha = 1;
 }
@@ -1671,7 +1828,7 @@ function drawSign() {
   ctx.strokeStyle = '#c98a4b'; ctx.lineWidth = 3;
   rounded(138, 356, 90, 34, 8); ctx.stroke();
   ctx.fillStyle = '#a05a2c';
-  ctx.font = '20px "Baloo 2", "Comic Sans MS", sans-serif';
+  ctx.font = '600 20px "Fredoka", "Baloo 2", "Comic Sans MS", sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('✨ ➜', 183, 374);
 }
@@ -1693,6 +1850,13 @@ function drawStars(t) {
     ctx.strokeStyle = '#fff3b0'; ctx.lineWidth = 2;
     starPath(s.x, y, 13 * pulse); ctx.stroke();
   }
+}
+function heartPath(x, y, r) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + r);
+  ctx.bezierCurveTo(x - r * 1.4, y - r * 0.3, x - r * 0.55, y - r * 1.25, x, y - r * 0.35);
+  ctx.bezierCurveTo(x + r * 0.55, y - r * 1.25, x + r * 1.4, y - r * 0.3, x, y + r);
+  ctx.closePath();
 }
 function starPath(x, y, r) {
   ctx.beginPath();
@@ -2171,6 +2335,13 @@ function drawParticles() {
     if (q.type === 'star') {
       ctx.fillStyle = q.color;
       starPath(q.x, q.y, q.size + 1.5); ctx.fill();
+    } else if (q.type === 'heart') {
+      ctx.save();
+      ctx.translate(q.x, q.y);
+      ctx.rotate(Math.sin(q.rot + q.age * 3) * 0.4);
+      ctx.fillStyle = q.color;
+      heartPath(0, 0, q.size + 1); ctx.fill();
+      ctx.restore();
     } else if (q.type === 'conf') {
       ctx.save();
       ctx.translate(q.x, q.y);

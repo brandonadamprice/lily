@@ -34,6 +34,9 @@ it, no install or internet needed.
 - Watch for the friendly lava fish leaping in the background
 - Colorful little birds fly past in V formations — and some magic ones trail
   fairy dust behind them
+- Hearts! Little hearts pop out when Lily flutters, grabs a star or wins a
+  level, they trail behind her gallop once Sparkle Trail is unlocked, and tiny
+  ones twinkle away in the sky
 - Two ranges of animated volcanoes smoke, glow, drip lava, and erupt on their
   own rhythms
 - A **day-night cycle** rolls through midday, sunset, a starry night, and dawn
@@ -76,14 +79,23 @@ between play sessions. The title screen has a tiny "start my magic over" link
 Everything (graphics, sounds, music, levels) is generated in code — it's a
 single HTML file with no dependencies.
 
+## The cutesy look
+
+Everything the player reads sits on a pastel-pink card: polka-dot paper, a
+white ring with a candy-pink halo, dashed "sticker" buttons, glowing candy
+pills for the level/star counters, and hearts, sparkles and bows drifting up
+behind the card. The play controls fade politely out of the way whenever a
+card is on screen.
+
 ## Fonts
 
 The game pins two Google Fonts so it looks the same on every device:
 
 - **Pacifico** — the cursive script used for big titles ("Unicorn Quest",
   "Level complete!")
-- **Baloo 2** — the rounded font used for everything else, chosen so the HUD,
-  buttons and hints stay easy for a new reader
+- **Fredoka** — the round, bubbly font used for everything else, chosen so the
+  HUD, buttons and hints stay easy for a new reader (Baloo 2 is kept next in
+  the stack as a near-identical fallback)
 
 Before this was pinned, the CSS was a fallback *chain* (`'Comic Sans MS',
 'Chalkboard SE', … cursive`), so each device stopped at whichever font it
