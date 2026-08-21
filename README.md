@@ -13,6 +13,8 @@ install or internet needed.
 - **⬆ / Space** (or W) — jump
 - Press jump **again in the air** to do a magic flutter (double jump)
 - Big on-screen buttons work too (mouse or touch)
+- After winning a level, press **Space** (or Enter) to jump straight to the
+  next one — no mouse needed
 - **Esc** (or the ⏸ button) pauses — keep playing, restart the level, or go
   back to the level map
 - 🔊 button (top right) mutes the music and sounds

@@ -177,6 +177,7 @@
     <div id="unlockTip"></div>
     <button class="playbtn" id="nextBtn">▶ Next Level!</button><br>
     <button class="smallbtn" id="mapBtn">🗺️ Choose a level</button>
+    <div class="keys" id="nextHint">(or press SPACE for the next level!)</div>
   </div>
 </div>
 
@@ -199,8 +200,8 @@ function resize() {
   canvas.height = innerHeight * dpr;
   canvas.style.width = innerWidth + 'px';
   canvas.style.height = innerHeight + 'px';
-  scale = innerHeight / H;
-  viewW = innerWidth / scale;
+  scale = innerHeight > 0 ? innerHeight / H : 1;   // hidden/minimized windows report 0
+  viewW = innerWidth > 0 ? innerWidth / scale : 960;
 }
 addEventListener('resize', resize);
 resize();
@@ -347,6 +348,13 @@ addEventListener('keydown', e => {
   }
   if (state === 'pause') return;
   if (state === 'title') { startGame(Math.min(unlockedCount + 1, 10)); return; }
+  // on the win card, jump keys go straight to the next level — no mouse needed
+  if (state === 'win' && winShown && !e.repeat &&
+      (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp')) {
+    if (currentLevel < 10) startGame(currentLevel + 1);
+    else showTitle();
+    return;
+  }
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.l = true;
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.r = true;
   if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w' || e.key === 'W') {
@@ -649,6 +657,7 @@ function showWinCard() {
     (winWasNew ? 'New magic: ' : 'Your magic: ') + m.icon + ' ' + m.name;
   document.getElementById('unlockTip').textContent = winWasNew ? m.tip : '';
   document.getElementById('nextBtn').classList.toggle('hidden', finale);
+  document.getElementById('nextHint').classList.toggle('hidden', finale);
   document.getElementById('mapBtn').textContent = finale ? '🦄 Choose a level' : '🗺️ Choose a level';
   if (perfect) sPerfect();
   document.getElementById('winScreen').classList.remove('hidden');
@@ -1751,6 +1760,13 @@ window.DEV = {
   info: () => ({level: currentLevel, unlocked: unlockedCount, worldW, plats: plats.length, stars: stars.length}),
   buildLevel,
   bfly: i => decoBflies[i],
+  // manually pump n frames (for testing when the tab is hidden and rAF is paused)
+  step: (dt = 0.016, n = 1) => {
+    for (let i = 0; i < n; i++) {
+      if (state !== 'title' && state !== 'pause') update(dt, performance.now() / 1000 + i * dt);
+    }
+    try { render(performance.now() / 1000); } catch (e) {}
+  },
 };
 </script>
 </body>
