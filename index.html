@@ -112,6 +112,9 @@
                 0 0 70px rgba(255,150,215,.3);
     max-width: min(640px, 94vw); max-height: 94vh; overflow-y: auto;
     scrollbar-width: thin; scrollbar-color: #ffb2de transparent;
+    /* fitCards() shrinks --fit when the window is too short for the card,
+       so nobody ever has to scroll a card to find the Play button. */
+    transform: scale(var(--fit, 1)); transform-origin: center center;
   }
   .card::-webkit-scrollbar { width: 10px; }
   .card::-webkit-scrollbar-track { background: transparent; }
@@ -246,6 +249,39 @@
     .lvlbtn { font-size: 20px; }
   }
 
+  /* short windows — a phone held sideways is wide but only ~360px tall, so
+     squeeze the spacing and type before fitCards() has to scale anything */
+  @media (max-height: 600px) {
+    .card { padding: 14px 26px; border-radius: 24px; }
+    .card h1 { font-size: 30px; }
+    .card h2 { font-size: 17px; margin: 0 0 6px; }
+    .card p  { font-size: 16px; line-height: 1.4; margin: 5px 0 9px; }
+    .bigmoji { font-size: 40px; }
+    .bigmoji::before, .bigmoji::after { font-size: 15px; }
+    .bigmoji::before { left: -20px; top: 4px; }
+    .bigmoji::after  { right: -20px; top: 14px; }
+    .playbtn { font-size: 21px; padding: 10px 30px;
+               box-shadow: 0 6px 0 #c22c7c, 0 10px 20px rgba(190,40,120,.4); }
+    .smallbtn { font-size: 15px; padding: 7px 18px; margin-top: 8px; }
+    .keys { font-size: 13px; margin-top: 8px; }
+    .levelmap { gap: 7px; padding: 9px; margin: 10px auto 2px; max-width: 330px; }
+    .lvlbtn { max-width: 44px; font-size: 17px; border-width: 2px; }
+    .mapcap { font-size: 13px; margin-top: 6px; }
+    .tiny { margin-top: 8px; }
+    #unlockBox { font-size: 18px; padding: 8px 20px; margin: 2px 0 8px; border-width: 2px; }
+    #unlockTip { font-size: 14px; margin: -2px 0 6px; }
+    #winDance { font-size: 28px; }
+  }
+
+  @media (max-height: 600px) and (min-width: 560px) {
+    #title .card {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0 26px; align-items: center;
+      max-width: min(880px, 96vw);
+    }
+    #title .levelmap { margin-top: 0; }
+  }
+
   /* while a card is up, the play controls politely fade back */
   #hud, .touchbtn { transition: opacity .35s ease; }
   body:has(.overlay:not(.hidden)) #hud,
@@ -277,28 +313,33 @@
 
 <div id="title" class="overlay">
   <div class="card">
-    <span class="bigmoji">🦄</span>
-    <h1>Unicorn Quest</h1>
-    <h2>✨ The Lost Magic ✨</h2>
-    <p>Lily's magic is scattered across <b>10 lava lands</b>!<br>
-       Win each level to get a piece of her magic back!</p>
-    <button class="playbtn" id="startBtn">▶ Play!</button>
-    <div class="levelmap" id="levelMap"></div>
-    <div class="mapcap" id="mapCap">Win a level to unlock new magic!</div>
-    <div class="keys">⬅ ➡ run &nbsp;•&nbsp; ⬆ or SPACE to jump &nbsp;•&nbsp; jump again in the air to flutter ✨</div>
-    <div id="installRow" class="hidden">
-      <button class="smallbtn hidden" id="installBtn">📲 Install Unicorn Quest</button>
-      <div class="keys hidden" id="iosTip">
-        Want it as an app? Tap <b>Share</b> ⬆️ then <b>Add to Home Screen</b>!
-      </div>
+    <!-- two halves: side by side on a phone held sideways, stacked elsewhere -->
+    <div class="tcol">
+      <span class="bigmoji">🦄</span>
+      <h1>Unicorn Quest</h1>
+      <h2>✨ The Lost Magic ✨</h2>
+      <p>Lily's magic is scattered across <b>10 lava lands</b>!<br>
+         Win each level to get a piece of her magic back!</p>
+      <button class="playbtn" id="startBtn">▶ Play!</button>
     </div>
-    <div class="tiny">
-      <button class="smallbtn" id="resetLink">↺ Start my magic over</button>
-      <span id="resetConfirm" class="hidden">
-        <b>Lose ALL your magic?</b><br>
-        <button class="smallbtn danger" id="resetYes">Yes, start over</button>
-        <button class="smallbtn" id="resetNo">No, keep my magic!</button>
-      </span>
+    <div class="tcol">
+      <div class="levelmap" id="levelMap"></div>
+      <div class="mapcap" id="mapCap">Win a level to unlock new magic!</div>
+      <div class="keys">⬅ ➡ run &nbsp;•&nbsp; ⬆ or SPACE to jump &nbsp;•&nbsp; jump again in the air to flutter ✨</div>
+      <div id="installRow" class="hidden">
+        <button class="smallbtn hidden" id="installBtn">📲 Install Unicorn Quest</button>
+        <div class="keys hidden" id="iosTip">
+          Want it as an app? Tap <b>Share</b> ⬆️ then <b>Add to Home Screen</b>!
+        </div>
+      </div>
+      <div class="tiny">
+        <button class="smallbtn" id="resetLink">↺ Start my magic over</button>
+        <span id="resetConfirm" class="hidden">
+          <b>Lose ALL your magic?</b><br>
+          <button class="smallbtn danger" id="resetYes">Yes, start over</button>
+          <button class="smallbtn" id="resetNo">No, keep my magic!</button>
+        </span>
+      </div>
     </div>
   </div>
 </div>
@@ -744,6 +785,7 @@ function refreshTitle() {
     if (!b.disabled) b.addEventListener('click', () => startGame(i));
     map.appendChild(b);
   }
+  fitCards();
 }
 
 function startGame(n) {
@@ -777,6 +819,7 @@ function pauseGame() {
   state = 'pause';
   keys.l = keys.r = false;
   document.getElementById('pauseScreen').classList.remove('hidden');
+  fitCards();
 }
 function resumeGame() {
   if (state !== 'pause') return;
@@ -796,10 +839,12 @@ document.getElementById('nextBtn').addEventListener('click', () =>
 function hideResetConfirm() {
   document.getElementById('resetConfirm').classList.add('hidden');
   document.getElementById('resetLink').classList.remove('hidden');
+  fitCards();
 }
 document.getElementById('resetLink').addEventListener('click', () => {
   document.getElementById('resetLink').classList.add('hidden');
   document.getElementById('resetConfirm').classList.remove('hidden');
+  fitCards();
 });
 document.getElementById('resetNo').addEventListener('click', hideResetConfirm);
 document.getElementById('resetYes').addEventListener('click', () => {
@@ -870,6 +915,7 @@ function showWinCard() {
   document.getElementById('mapBtn').textContent = finale ? '🦄 Choose a level' : '🗺️ Choose a level';
   if (perfect) sPerfect();
   document.getElementById('winScreen').classList.remove('hidden');
+  fitCards();
 }
 
 // ---------- update ----------
@@ -2419,6 +2465,31 @@ function render(t) {
   drawParticles();
   drawFinaleFlash();
 }
+
+// ---------- keep every card fully on screen ----------
+// A phone held sideways is wide but barely 360px tall. The CSS above squeezes
+// the spacing first; if a card still doesn't fit (a long win card, a big
+// system font size), shrink it the rest of the way rather than making a small
+// player scroll around to find the button.
+function fitCard(card) {
+  if (!card.offsetHeight) return;              // that card is hidden right now
+  card.style.maxHeight = 'none';               // we do the fitting ourselves
+  const fit = Math.min(1,
+    (innerHeight - 12) / card.offsetHeight,    // offset sizes ignore the scale
+    (innerWidth - 12) / card.offsetWidth);
+  card.style.setProperty('--fit', fit.toFixed(4));
+}
+function fitCards() { document.querySelectorAll('.card').forEach(fitCard); }
+
+// Cards resize when they are shown, when their text changes and when the font
+// finally loads — watching them catches all of it.
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(fitCards);
+  document.querySelectorAll('.card').forEach(c => ro.observe(c));
+}
+addEventListener('resize', fitCards);
+addEventListener('orientationchange', fitCards);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitCards);
 
 // ---------- installing Unicorn Quest as an app ----------
 // The service worker caches the game so it plays with no internet; the button
