@@ -4,10 +4,17 @@ A gentle platformer for little players (ages ~4+). Lily the unicorn's magic is
 scattered across **10 lava lands** — win each level to earn a piece of her
 magic back!
 
+## Play it
+
+🎮 **[unicorngame.hallowedgains.com](https://unicorngame.hallowedgains.com)**
+
+Served straight from this repo by GitHub Pages — every push to `main` goes
+live within a minute or so.
+
 ## How to play
 
-Just open [index.html](index.html) in any browser — double-click it, no
-install or internet needed.
+You can also just open [index.html](index.html) in any browser — double-click
+it, no install or internet needed.
 
 - **⬅ ➡** (or A/D) — run
 - **⬆ / Space** (or W) — jump
