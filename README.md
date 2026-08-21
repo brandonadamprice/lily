@@ -19,9 +19,14 @@ install or internet needed.
   back to the level map
 - 🔊 button (top right) mutes the music and sounds
 - Bump into a butterfly and it flutters out of the way!
+- **Friendly lava sharks** patrol below — fins cutting the surface, leaping in
+  big arcs. Bump one mid-leap and it boops Lily up for a bonus bounce (they
+  are never dangerous)
 - Land on a smiley **trampoline flower** for a super bounce (level 2+)
 - Collect **every star** in a level for a PERFECT ⭐ badge on the level map
 - Watch for the friendly lava fish leaping in the background
+- Two ranges of animated volcanoes smoke, glow, drip lava, and erupt on their
+  own rhythms
 - Beating level 10 triggers a grand finale: Lily flies a rainbow
   loop-the-loop with fireworks!
 

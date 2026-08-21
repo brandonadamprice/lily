@@ -249,7 +249,7 @@ const SKIES = [
 
 // ---------- level state (rebuilt by loadLevel) ----------
 let currentLevel = 1;
-let plats = [], stars = [], decoBflies = [], flowers = [];
+let plats = [], stars = [], decoBflies = [], flowers = [], sharks = [];
 let crystal = {x: 2000, y: 352};
 let worldW = 3000, maxX = 2900;
 let fish = null, nextFishT = 4;
@@ -258,13 +258,14 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, u) => a + (b - a) * u;
 const ease = u => u < 0.5 ? 2*u*u : 1 - Math.pow(-2*u + 2, 2) / 2;
 function hash(n) { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); }
+function sharkX(k, t) { return k.cx + Math.sin(t * k.spd + k.ph) * k.range; }
 
 function buildLevel(n) {
   let seed = n * 1000;
   const R = () => hash(seed++);
   const count = 6 + n * 2;                       // 8 platforms on level 1 -> 26 on level 10
   const P = [{x:-200, y:430, w:520}];            // start island (sign lives here)
-  const S = [], F = [];
+  const S = [], F = [], K = [];
   let x = 320, prevY = 430;
   for (let i = 1; i < count; i++) {
     const gap = 60 + R() * (40 + n * 7);         // gently wider gaps later
@@ -293,8 +294,24 @@ function buildLevel(n) {
     B.push({x: bx + R()*220, y: 200 + R()*120, c: B.length % 6, ph: B.length * 1.7,
             ox:0, oy:0, vx:0, vy:0, startled:0});
   }
+  // friendly lava sharks patrolling between the islands
+  const sharkCount = Math.min(6, 1 + Math.floor(n / 2));
+  for (let i = 0; i < sharkCount; i++) {
+    K.push({
+      cx: 620 + (x - 900) * (i + 0.5) / sharkCount,
+      range: 130 + R() * 130,
+      spd: 0.3 + R() * 0.3,
+      ph: R() * 6.28,
+      leapH: 120 + R() * 60,
+      leapDur: 1.4,
+      leapT: -99,
+      nextLeap: 2 + R() * 7,
+      boopCd: 0,
+      col: i % 2 ? '#6f7fd8' : '#8f6fd0',
+    });
+  }
   return {
-    plats: P, stars: S, bflies: B, flowers: F,
+    plats: P, stars: S, bflies: B, flowers: F, sharks: K,
     crystal: {x: endP.x + endP.w - 140, y: 352},
     worldW: endP.x + endP.w + 80,
     maxX: endP.x + endP.w - 30,
@@ -322,6 +339,7 @@ function loadLevel(n) {
   currentLevel = n;
   const L = buildLevel(n);
   plats = L.plats; stars = L.stars; decoBflies = L.bflies; flowers = L.flowers;
+  sharks = L.sharks;
   crystal = L.crystal; worldW = L.worldW; maxX = L.maxX;
   got = 0;
   finale = false; finaleTrail.length = 0; fwTimer = 0;
@@ -450,6 +468,11 @@ function sWin() {
     tone(f, 1.1, 'triangle', 0.09, t0 + 0.7));
 }
 function sBoing() { tone(160, 0.3, 'square', 0.10, 0, 820); tone(320, 0.3, 'sine', 0.08, 0, 1200); }
+function sSharkLeap() { tone(180, 0.25, 'sine', 0.07, 0, 90); }
+function sSharkBoop() {
+  tone(420, 0.18, 'sine', 0.13, 0, 900);
+  tone(880, 0.22, 'triangle', 0.10, AC ? AC.currentTime + 0.09 : 0, 1300);
+}
 function sPop()   { tone(700, 0.2, 'triangle', 0.12, 0, 120); }
 function sPerfect() {
   if (!AC) return;
@@ -930,6 +953,45 @@ function update(dt, t) {
     if (cloudGone.t > 1) cloudGone = null;
   }
 
+  // friendly lava sharks: patrol, leap, and boop Lily upward for fun
+  for (const k of sharks) {
+    const kx = sharkX(k, t);
+    const onScreen = kx > camX - 80 && kx < camX + viewW + 80;
+    const u = (t - k.leapT) / k.leapDur;
+    if (u > 1) {
+      k.nextLeap -= dt;
+      if (k.nextLeap <= 0) {
+        k.leapT = t;
+        k.nextLeap = 5 + Math.random() * 8;
+        if (onScreen) {
+          sSharkLeap();
+          burst(kx, LAVA_Y, 10, () => ({
+            x: kx + Math.random()*50-25, y: LAVA_Y,
+            vx: Math.random()*140-70, vy: -(80 + Math.random()*160), g: 480,
+            size: 2.5 + Math.random()*3.5,
+            color: Math.random() < 0.5 ? '#ffc24d' : '#ff7a2e', life: 0.6
+          }));
+        }
+      }
+    } else if (u >= 0) {
+      const ky = LAVA_Y + 10 - Math.sin(u * Math.PI) * k.leapH;
+      if (state === 'play' && k.boopCd <= 0 &&
+          Math.abs(player.x - kx) < 48 && Math.abs(player.y + player.hh - ky) < 42) {
+        player.vy = -880;
+        player.onGround = false; player.stand = null; player.flut = 0;
+        player.squash = -0.4;
+        k.boopCd = 1.4;
+        sSharkBoop();
+        burst(kx, ky - 20, 10, () => ({
+          x: kx + Math.random()*40-20, y: ky - 20,
+          vx: Math.random()*160-80, vy: -(40 + Math.random()*110), g: 380,
+          size: 3, color: PASTELS[(Math.random()*PASTELS.length)|0], life: 0.8, type:'star'
+        }));
+      }
+    }
+    k.boopCd = Math.max(0, k.boopCd - dt);
+  }
+
   // a friendly lava fish leaps now and then
   nextFishT -= dt;
   if (!fish && nextFishT <= 0 && state !== 'title') {
@@ -996,7 +1058,141 @@ function drawSky(t) {
   ctx.beginPath(); ctx.arc(sx, sy, 26, 0, 7); ctx.fill();
 }
 
+// one volcano, drawn in world space
+function drawVolcano(mx, peak, halfW, base, k, t, far) {
+  const craterW = halfW * 0.13 + 7;
+  // eruption cycle — each volcano puffs off on its own rhythm
+  const period = 11 + hash(k + 21) * 9;
+  const phase = ((t + hash(k + 33) * period) % period) / period;
+  const eu = phase < 0.2 ? phase / 0.2 : 0;              // 0..1 while erupting
+  const boil = 0.5 + 0.5 * Math.sin(t * 1.7 + k);
+
+  // silhouette with flared, concave slopes
+  const body = ctx.createLinearGradient(0, peak, 0, base);
+  if (far) {
+    body.addColorStop(0, 'rgba(120,95,165,0.42)');
+    body.addColorStop(1, 'rgba(96,72,140,0.30)');
+  } else {
+    body.addColorStop(0, 'rgba(104,74,148,0.85)');
+    body.addColorStop(0.6, 'rgba(84,57,126,0.8)');
+    body.addColorStop(1, 'rgba(70,44,108,0.72)');
+  }
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(mx - halfW, base);
+  ctx.quadraticCurveTo(mx - halfW * 0.72, peak + (base - peak) * 0.5, mx - craterW, peak);
+  ctx.lineTo(mx + craterW, peak + 2);
+  ctx.quadraticCurveTo(mx + halfW * 0.72, peak + (base - peak) * 0.5, mx + halfW, base);
+  ctx.closePath();
+  ctx.fill();
+
+  // sunlit left face for a bit of dimension
+  ctx.save();
+  ctx.clip();
+  ctx.fillStyle = far ? 'rgba(255,255,255,0.05)' : 'rgba(255,225,255,0.09)';
+  ctx.beginPath();
+  ctx.moveTo(mx - halfW, base);
+  ctx.quadraticCurveTo(mx - halfW * 0.72, peak + (base - peak) * 0.5, mx - craterW, peak);
+  ctx.lineTo(mx - craterW * 0.2, peak);
+  ctx.lineTo(mx - halfW * 0.36, base);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  if (far) return;   // distant ones stay simple and hazy
+
+  // lava running down the slopes — kept inside the mountain by clipping
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(mx - halfW, base);
+  ctx.quadraticCurveTo(mx - halfW * 0.72, peak + (base - peak) * 0.5, mx - craterW, peak);
+  ctx.lineTo(mx + craterW, peak + 2);
+  ctx.quadraticCurveTo(mx + halfW * 0.72, peak + (base - peak) * 0.5, mx + halfW, base);
+  ctx.closePath();
+  ctx.clip();
+  const H2 = base - peak;
+  const flows = [[1, 0.5, 0.62], [-1, 0.38, 0.48]];
+  for (let f = 0; f < flows.length; f++) {
+    const dir = flows[f][0], spread = halfW * flows[f][1], len = H2 * flows[f][2];
+    const p0 = [mx + dir * craterW * 0.45, peak + 5];
+    const p1 = [mx + dir * spread * 0.55, peak + len * 0.45];
+    const p2 = [mx + dir * spread, peak + len];
+    const at = u => [
+      (1-u)*(1-u)*p0[0] + 2*(1-u)*u*p1[0] + u*u*p2[0],
+      (1-u)*(1-u)*p0[1] + 2*(1-u)*u*p1[1] + u*u*p2[1]
+    ];
+    // molten stream, thick at the crater and tapering as it cools
+    for (let s = 0; s <= 44; s++) {
+      const u = s / 44, q = at(u);
+      const heat = 1 - u;
+      ctx.fillStyle = 'rgba(255,' + Math.round(90 + heat * 110) + ',' + Math.round(30 + heat * 50) +
+                      ',' + (0.30 + heat * 0.45).toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(q[0], q[1], 5.5 * (1 - u * 0.62), 0, 7); ctx.fill();
+    }
+    // bright globs creeping down
+    for (let d = 0; d < 3; d++) {
+      const u = (t * 0.1 + hash(k * 5 + f * 3 + d) + d * 0.33) % 1;
+      const q = at(u);
+      ctx.fillStyle = 'rgba(255,231,150,' + (0.85 * (1 - u)).toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(q[0], q[1], 3.4 * (1 - u * 0.5), 0, 7); ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // crater glow
+  const glowR = (26 + boil * 6) * (1 + eu * 1.5);
+  const cg = ctx.createRadialGradient(mx, peak + 2, 2, mx, peak + 2, glowR);
+  cg.addColorStop(0, 'rgba(255,225,140,' + (0.85 + eu * 0.15).toFixed(2) + ')');
+  cg.addColorStop(0.45, 'rgba(255,140,50,' + (0.5 + eu * 0.3).toFixed(2) + ')');
+  cg.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = cg;
+  ctx.beginPath(); ctx.arc(mx, peak + 2, glowR, 0, 7); ctx.fill();
+  // molten crater lip
+  ctx.fillStyle = 'rgba(255,170,70,0.95)';
+  ctx.beginPath();
+  ctx.ellipse(mx, peak + 2, craterW * 0.85, 3.2 + boil, 0, 0, 7);
+  ctx.fill();
+
+  // smoke puffs rising and drifting
+  for (let s = 0; s < 5; s++) {
+    const sp = (t * 0.13 + hash(k * 11 + s * 7)) % 1;
+    const drift = (hash(k * 3 + s) - 0.5) * 60;
+    const sx = mx + drift * sp + Math.sin(sp * 4 + s) * 10;
+    const sy = peak - 6 - sp * 150;
+    const r = 9 + sp * 26;
+    ctx.fillStyle = 'rgba(214,198,228,' + (0.32 * (1 - sp) * (1 - sp * 0.3)).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+  }
+
+  // eruption: glowing lava arcs out of the crater
+  if (eu > 0) {
+    for (let b = 0; b < 9; b++) {
+      const bu = clamp(eu * 1.35 - b * 0.045, 0, 1);
+      if (bu <= 0 || bu >= 1) continue;
+      const dir = b % 2 ? 1 : -1;
+      const spd = 34 + hash(k * 13 + b) * 46;
+      const bx = mx + dir * spd * bu * 1.5;
+      const by = peak + 2 - (110 + hash(k + b) * 55) * Math.sin(bu * Math.PI * 0.92);
+      ctx.fillStyle = 'rgba(255,' + (150 + Math.floor(hash(b) * 80)) + ',70,' + (1 - bu).toFixed(2) + ')';
+      ctx.beginPath(); ctx.arc(bx, by, 4.5 - bu * 2.2, 0, 7); ctx.fill();
+    }
+    // ash burst at the mouth
+    ctx.fillStyle = 'rgba(230,215,240,' + (0.3 * (1 - eu)).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(mx, peak - 22 - eu * 46, 16 + eu * 34, 0, 7); ctx.fill();
+  }
+}
+
 function drawMountains(t) {
+  // far, hazy range
+  setLayer(0.14);
+  const offF = camX * 0.14;
+  const kF0 = Math.floor(offF / 430) - 1;
+  const nF = Math.ceil(viewW / 430) + 3;
+  for (let i = 0; i < nF; i++) {
+    const k = kF0 + i;
+    const mx = k * 430 + hash(k * 17) * 200;
+    drawVolcano(mx, 330 + hash(k * 29) * 70, 120 + hash(k * 7) * 60, LAVA_Y + 20, k, t, true);
+  }
+  // near, detailed range
   setLayer(0.25);
   const off = camX * 0.25;
   const k0 = Math.floor(off / 520) - 1;
@@ -1004,27 +1200,7 @@ function drawMountains(t) {
   for (let i = 0; i < n; i++) {
     const k = k0 + i;
     const mx = k * 520 + hash(k) * 220;
-    const peak = 260 + hash(k + 9) * 90;
-    ctx.fillStyle = 'rgba(88,60,130,0.75)';
-    ctx.beginPath();
-    ctx.moveTo(mx - 160, LAVA_Y + 20);
-    ctx.lineTo(mx, peak);
-    ctx.lineTo(mx + 160, LAVA_Y + 20);
-    ctx.closePath(); ctx.fill();
-    // glowing crater
-    ctx.fillStyle = 'rgba(255,130,60,0.8)';
-    ctx.beginPath();
-    ctx.moveTo(mx - 16, peak + 14);
-    ctx.lineTo(mx, peak);
-    ctx.lineTo(mx + 16, peak + 14);
-    ctx.closePath(); ctx.fill();
-    // lava trickle
-    ctx.strokeStyle = 'rgba(255,120,50,0.45)';
-    ctx.lineWidth = 5; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(mx + 4, peak + 12);
-    ctx.quadraticCurveTo(mx + 30, peak + 90, mx + 20, peak + 150);
-    ctx.stroke();
+    drawVolcano(mx, 258 + hash(k + 9) * 92, 150 + hash(k + 4) * 55, LAVA_Y + 20, k, t, false);
   }
   // warm haze above the lava
   setLayer(1);
@@ -1377,6 +1553,84 @@ function drawFlowers(t) {
   }
 }
 
+function drawSharkBody(k, t, leaping) {
+  // drawn in the shark's own frame, nose pointing +x
+  ctx.fillStyle = k.col;
+  ctx.beginPath(); ctx.ellipse(0, 0, 30, 13, 0, 0, 7); ctx.fill();
+  // tail
+  ctx.beginPath();
+  ctx.moveTo(-24, 0);
+  ctx.lineTo(-44, -15);
+  ctx.lineTo(-38, 0);
+  ctx.lineTo(-44, 15);
+  ctx.closePath(); ctx.fill();
+  // dorsal fin
+  ctx.beginPath();
+  ctx.moveTo(-6, -10); ctx.lineTo(2, -30); ctx.lineTo(12, -9);
+  ctx.closePath(); ctx.fill();
+  // pale belly
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.beginPath(); ctx.ellipse(2, 5, 23, 7, 0, 0, 7); ctx.fill();
+  // side fin
+  ctx.fillStyle = k.col;
+  ctx.beginPath();
+  ctx.moveTo(4, 6); ctx.lineTo(-6, 20); ctx.lineTo(12, 9);
+  ctx.closePath(); ctx.fill();
+  // big friendly smile
+  ctx.strokeStyle = '#3a2b4d'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(19, 1, 8, 0.15, 1.5); ctx.stroke();
+  if (leaping) { // little teeth when he's whooping mid-air
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(20 + i * 4, 3.5);
+      ctx.lineTo(22 + i * 4, 7.5);
+      ctx.lineTo(24 + i * 4, 3.5);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  // eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(17, -5, 5, 0, 7); ctx.fill();
+  ctx.fillStyle = '#3a2b4d';
+  ctx.beginPath(); ctx.arc(18.5, -5, 2.6, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(19.5, -6, 1, 0, 7); ctx.fill();
+  // blush
+  ctx.fillStyle = 'rgba(255,150,190,0.45)';
+  ctx.beginPath(); ctx.arc(12, 3, 3.2, 0, 7); ctx.fill();
+}
+
+function drawSharks(t) {
+  setLayer(1);
+  for (const k of sharks) {
+    const kx = sharkX(k, t);
+    if (kx < camX - 120 || kx > camX + viewW + 120) continue;
+    const dir = Math.cos(t * k.spd + k.ph) >= 0 ? 1 : -1;
+    const u = (t - k.leapT) / k.leapDur;
+    const leaping = u >= 0 && u <= 1;
+    const ky = leaping ? LAVA_Y + 10 - Math.sin(u * Math.PI) * k.leapH : LAVA_Y + 14;
+    ctx.save();
+    ctx.translate(kx, ky);
+    ctx.scale(dir, 1);
+    if (leaping) ctx.rotate((u - 0.5) * 1.5);
+    else ctx.translate(0, Math.sin(t * 1.6 + k.ph) * 2.5);
+    drawSharkBody(k, t, leaping);
+    ctx.restore();
+    if (!leaping) {
+      // wake ripples around the fin
+      ctx.strokeStyle = 'rgba(255,240,170,0.55)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 2; i++) {
+        const w = 16 + i * 13 + Math.sin(t * 4 + i + k.ph) * 3;
+        ctx.beginPath();
+        ctx.arc(kx - dir * (10 + i * 12), LAVA_Y - 1, w, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
 function drawFish(t) {
   if (!fish) return;
   const u = (t - fish.t0) / fish.dur;
@@ -1726,6 +1980,7 @@ function render(t) {
   }
   if (cloudGone) drawCloud(cloudGone.x, cloudGone.y, 1, 1 - cloudGone.t);
 
+  drawSharks(t);
   drawFish(t);
   drawLava(t);
   drawParticles();
@@ -1760,6 +2015,8 @@ window.DEV = {
   info: () => ({level: currentLevel, unlocked: unlockedCount, worldW, plats: plats.length, stars: stars.length}),
   buildLevel,
   bfly: i => decoBflies[i],
+  sharks: () => sharks,
+  leap: i => { sharks[i].leapT = performance.now() / 1000; sharks[i].nextLeap = 9; },
   // manually pump n frames (for testing when the tab is hidden and rAF is paused)
   step: (dt = 0.016, n = 1) => {
     for (let i = 0; i < n; i++) {
