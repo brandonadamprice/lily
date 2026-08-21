@@ -34,6 +34,10 @@ it, no install or internet needed.
 - Watch for the friendly lava fish leaping in the background
 - Two ranges of animated volcanoes smoke, glow, drip lava, and erupt on their
   own rhythms
+- A **day-night cycle** rolls through midday, sunset, a starry night, and dawn
+  every ~3 minutes — a smiley sun and sleepy moon arc across the sky, stars
+  twinkle after dark, and shooting stars streak past. Each level starts at a
+  different time of day
 - Beating level 10 triggers a grand finale: Lily flies a rainbow
   loop-the-loop with fireworks!
 
@@ -64,6 +68,8 @@ between play sessions. The title screen has a tiny "start my magic over" link
 - Levels get gently longer and trickier (moving islands appear from level 3),
   but every level stays well within easy jump range.
 - Collecting stars is optional — reaching the crystal always wins.
+- Night only dims the sky and background — the islands, stars, and Lily stay
+  bright and easy to see.
 
 Everything (graphics, sounds, music, levels) is generated in code — it's a
 single HTML file with no dependencies.
