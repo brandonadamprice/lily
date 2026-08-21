@@ -32,6 +32,8 @@ it, no install or internet needed.
 - Land on a smiley **trampoline flower** for a super bounce (level 2+)
 - Collect **every star** in a level for a PERFECT ⭐ badge on the level map
 - Watch for the friendly lava fish leaping in the background
+- Colorful little birds fly past in V formations — and some magic ones trail
+  fairy dust behind them
 - Two ranges of animated volcanoes smoke, glow, drip lava, and erupt on their
   own rhythms
 - A **day-night cycle** rolls through midday, sunset, a starry night, and dawn
@@ -73,3 +75,20 @@ between play sessions. The title screen has a tiny "start my magic over" link
 
 Everything (graphics, sounds, music, levels) is generated in code — it's a
 single HTML file with no dependencies.
+
+## Fonts
+
+The game pins two Google Fonts so it looks the same on every device:
+
+- **Pacifico** — the cursive script used for big titles ("Unicorn Quest",
+  "Level complete!")
+- **Baloo 2** — the rounded font used for everything else, chosen so the HUD,
+  buttons and hints stay easy for a new reader
+
+Before this was pinned, the CSS was a fallback *chain* (`'Comic Sans MS',
+'Chalkboard SE', … cursive`), so each device stopped at whichever font it
+happened to have — Comic Sans on Windows, a script face on phones. That is why
+the game used to look different on mobile and desktop.
+
+Playing offline by double-clicking the file still works; without a network the
+web fonts simply fall back to that old system stack.
