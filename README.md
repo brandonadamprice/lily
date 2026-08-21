@@ -110,6 +110,11 @@ pills for the level/star counters, and hearts, sparkles and bows drifting up
 behind the card. The play controls fade politely out of the way whenever a
 card is on screen.
 
+Cards always fit the window — no scrolling to find the Play button. A phone
+held sideways is wide but only ~350px tall, so short windows get tighter
+spacing and the title screen splits into two columns; anything that still
+doesn't fit is scaled down to suit.
+
 ## Fonts
 
 The game pins two Google Fonts so it looks the same on every device:
