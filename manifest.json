@@ -1,0 +1,19 @@
+{
+  "name": "Unicorn Quest: The Lost Magic",
+  "short_name": "Unicorn Quest",
+  "description": "A gentle platformer for little players. Win back the lost magic across 10 lava lands!",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#2a1040",
+  "theme_color": "#2a1040",
+  "lang": "en",
+  "categories": ["games", "kids", "entertainment"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

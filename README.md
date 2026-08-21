@@ -11,6 +11,21 @@ magic back!
 Served straight from this repo by GitHub Pages — every push to `main` goes
 live within a minute or so.
 
+### Install it as an app
+
+Unicorn Quest is a PWA, so it can live on a home screen like a real app —
+its own icon, no browser bars, and it works with no internet at all.
+
+- **Android / Chrome / Edge** — an **📲 Install Unicorn Quest** button appears
+  on the title screen (the browser menu has "Install" too)
+- **iPhone / iPad** — tap **Share** ⬆️ then **Add to Home Screen** (Safari has
+  no install button; the title screen shows a reminder)
+- **Desktop Chrome / Edge** — the install icon at the right of the address bar
+
+Once installed it opens fullscreen in landscape and plays offline. Saved magic
+is kept by the browser, so it carries over from the website to the installed
+app on the same device.
+
 ## How to play
 
 You can also just open [index.html](index.html) in any browser — double-click
@@ -76,8 +91,16 @@ between play sessions. The title screen has a tiny "start my magic over" link
 - Night only dims the sky and background — the islands, stars, and Lily stay
   bright and easy to see.
 
-Everything (graphics, sounds, music, levels) is generated in code — it's a
-single HTML file with no dependencies.
+Everything (graphics, sounds, music, levels) is generated in code — the whole
+game is one HTML file with no dependencies. The other files are just the app
+wrapper: `manifest.json` describes the installed app, `sw.js` caches the game
+for offline play, and the four icons are rendered by the game's own unicorn
+drawing code (`node tools/make-icons.mjs` re-makes them).
+
+The service worker fetches the page from the network first and falls back to
+its cache, so a push to `main` is still live on the next launch — the cache is
+only there for when the network isn't. `sw.js` carries a panic switch in its
+header comment if it ever needs to be turned off.
 
 ## The cutesy look
 

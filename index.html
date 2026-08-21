@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Unicorn Quest: The Lost Magic</title>
+<meta name="description" content="A gentle platformer for little players. Win back the lost magic across 10 lava lands!">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2a1040">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Unicorn Quest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..600&family=Pacifico&display=swap" rel="stylesheet">
@@ -277,6 +286,12 @@
     <div class="levelmap" id="levelMap"></div>
     <div class="mapcap" id="mapCap">Win a level to unlock new magic!</div>
     <div class="keys">⬅ ➡ run &nbsp;•&nbsp; ⬆ or SPACE to jump &nbsp;•&nbsp; jump again in the air to flutter ✨</div>
+    <div id="installRow" class="hidden">
+      <button class="smallbtn hidden" id="installBtn">📲 Install Unicorn Quest</button>
+      <div class="keys hidden" id="iosTip">
+        Want it as an app? Tap <b>Share</b> ⬆️ then <b>Add to Home Screen</b>!
+      </div>
+    </div>
     <div class="tiny">
       <button class="smallbtn" id="resetLink">↺ Start my magic over</button>
       <span id="resetConfirm" class="hidden">
@@ -2403,6 +2418,46 @@ function render(t) {
   drawLava(t);
   drawParticles();
   drawFinaleFlash();
+}
+
+// ---------- installing Unicorn Quest as an app ----------
+// The service worker caches the game so it plays with no internet; the button
+// only appears on browsers that offer a real install prompt.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+const installRow = document.getElementById('installRow');
+const installBtn = document.getElementById('installBtn');
+const alreadyAnApp = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches
+                     || navigator.standalone === true;
+let installPrompt = null;
+
+addEventListener('beforeinstallprompt', e => {      // Chrome, Edge, Android
+  e.preventDefault();
+  installPrompt = e;
+  installBtn.classList.remove('hidden');
+  installRow.classList.remove('hidden');
+});
+installBtn.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installRow.classList.add('hidden');
+});
+addEventListener('appinstalled', () => {
+  installPrompt = null;
+  installRow.classList.add('hidden');
+});
+
+// iPhone and iPad have no install prompt at all — it lives in the Share menu,
+// so tell people where to look instead of showing a button that can't work.
+const onIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+              || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (onIOS && !alreadyAnApp && location.protocol.startsWith('http')) {
+  document.getElementById('iosTip').classList.remove('hidden');
+  installRow.classList.remove('hidden');
 }
 
 // ---------- main loop ----------
