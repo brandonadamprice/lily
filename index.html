@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Unicorn Quest: The Lost Magic</title>
-<meta name="description" content="A gentle platformer for little players. Win back the lost magic across 10 lava lands!">
+<meta name="description" content="A gentle platformer for little players. Win back the lost magic across 12 lava lands!">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2a1040">
 <link rel="icon" href="icon-192.png">
@@ -170,7 +170,7 @@
   .hidden { display: none !important; }
 
   .levelmap {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
     margin: 18px auto 2px; max-width: 380px; padding: 14px 12px;
     border-radius: 26px; background: rgba(255,255,255,.55);
     border: 2.5px dashed #ffc3e6;
@@ -318,7 +318,7 @@
       <span class="bigmoji">🦄</span>
       <h1>Unicorn Quest</h1>
       <h2>✨ The Lost Magic ✨</h2>
-      <p>Lily's magic is scattered across <b>10 lava lands</b>!<br>
+      <p>Lily's magic is scattered across <b>12 lava lands</b>!<br>
          Win each level to get a piece of her magic back!</p>
       <button class="playbtn" id="startBtn">▶ Play!</button>
     </div>
@@ -373,7 +373,7 @@
 'use strict';
 // ============================================================
 // Unicorn Quest: The Lost Magic — a gentle game for small hands
-// 10 levels; each one won gives Lily a new piece of magic.
+// One level per magic unlock; winning a level gives Lily that piece back.
 // ============================================================
 
 const canvas = document.getElementById('game');
@@ -406,14 +406,17 @@ const MAGIC = [
   {icon:'🧲', name:'Star Magnet',        tip:'Stars float right to you!'},
   {icon:'💫', name:'Triple Flutter',     tip:'Now you can jump three times!'},
   {icon:'🪽', name:'Magic Wings',        tip:'Hold JUMP in the air to glide down slowly!'},
-  {icon:'🦘', name:'Super Bounce',       tip:'Your jumps are extra bouncy now!'},
+  {icon:'🦘', name:'Super Bounce',       tip:'Rainbow shoes! Your jumps are extra bouncy now!'},
   {icon:'🌠', name:'Glitter Gallop',     tip:'Glitter bursts wherever you gallop!'},
   {icon:'👑', name:'Star Crown',         tip:'Shiny stars circle your head!'},
+  {icon:'🌟', name:'Zoom Hooves',        tip:'You gallop super fast now!'},
+  {icon:'☁️', name:'Cloud Buddy',        tip:'A happy little cloud tags along!'},
   {icon:'🔮', name:'ALL the Magic!',     tip:'Lily is the most magical unicorn ever!'},
 ];
+const LEVELS = MAGIC.length;
 let unlockedCount = 0, perfectMask = 0;
 try {
-  unlockedCount = Math.min(10, +localStorage.getItem('uq_magic') || 0);
+  unlockedCount = Math.min(LEVELS, +localStorage.getItem('uq_magic') || 0);
   perfectMask = +localStorage.getItem('uq_perfect') || 0;
 } catch (e) {}
 function saveProgress() {
@@ -425,6 +428,7 @@ function saveProgress() {
 const hasMagic = k => unlockedCount >= k;
 const jumpV = () => hasMagic(7) ? 830 : 760;   // Super Bounce
 const maxFlut = () => hasMagic(5) ? 2 : 1;     // Triple Flutter
+const runSpeed = () => hasMagic(10) ? 380 : RUN;   // Zoom Hooves
 
 // ---------- day / night cycle (top -> bottom; the bottom stays warm from the lava) ----------
 const DAY_CYCLE = 170;   // seconds for a full day
@@ -471,7 +475,7 @@ function sharkX(k, t) { return k.cx + Math.sin(t * k.spd + k.ph) * k.range; }
 function buildLevel(n) {
   let seed = n * 1000;
   const R = () => hash(seed++);
-  const count = 6 + n * 2;                       // 8 platforms on level 1 -> 26 on level 10
+  const count = 6 + n * 2;                       // 8 platforms on level 1 -> 30 on level 12
   const P = [{x:-200, y:430, w:520}];            // start island (sign lives here)
   const S = [], F = [], K = [];
   let x = 320, prevY = 430;
@@ -542,6 +546,8 @@ let cloudGone = null;
 let winT = 0, winShown = false, winWasNew = false, rainbow = false;
 let confettiTimer = 0;
 let finale = false, finaleStart = {x:0, y:0}, finaleTrail = [], fwTimer = 0;
+const buddy = {x: 60, y: 350};    // Cloud Buddy's spot, always drifting after Lily
+function buddyHome() { return {x: player.x - player.facing * 54, y: player.y - 62}; }
 
 function loadLevel(n) {
   currentLevel = n;
@@ -556,6 +562,7 @@ function loadLevel(n) {
   player.facing = 1; player.onGround = false; player.flut = 0; player.stand = null;
   lastSafePlat = plats[0]; lastSafeX = 60;
   camX = 0; rainbow = false; winShown = false; winWasNew = false; cloudGone = null;
+  Object.assign(buddy, buddyHome());   // the cloud starts beside her, not miles away
   parts.length = 0;
   updateHud();
 }
@@ -573,11 +580,11 @@ addEventListener('keydown', e => {
     return;
   }
   if (state === 'pause') return;
-  if (state === 'title') { startGame(Math.min(unlockedCount + 1, 10)); return; }
+  if (state === 'title') { startGame(Math.min(unlockedCount + 1, LEVELS)); return; }
   // on the win card, jump keys go straight to the next level — no mouse needed
   if (state === 'win' && winShown && !e.repeat &&
       (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp')) {
-    if (currentLevel < 10) startGame(currentLevel + 1);
+    if (currentLevel < LEVELS) startGame(currentLevel + 1);
     else showTitle();
     return;
   }
@@ -735,6 +742,7 @@ function burst(x, y, n, mk) { for (let i = 0; i < n; i++) spawn(mk(i)); }
 
 const PASTELS = ['#ff8fc8','#ffd94d','#8fd8ff','#b28fff','#8fffb0','#ffb28f'];
 const PINKS   = ['#ff8fc8','#ff6fb5','#ffb3dd','#ff9ecf','#ffc2e6'];
+const RAINBOW = ['#ff5f5f','#ffb14d','#ffe94d','#6fdc6f','#5fb8ff','#b38fff'];
 const pinkOne = () => PINKS[(Math.random()*PINKS.length)|0];
 
 // ---------- floating hearts + sparkles behind the cards (pure decoration) ----------
@@ -757,16 +765,16 @@ for (const ov of document.querySelectorAll('.overlay')) {
 // ---------- flow ----------
 function refreshTitle() {
   hideResetConfirm();
-  const next = Math.min(unlockedCount + 1, 10);
+  const next = Math.min(unlockedCount + 1, LEVELS);
   document.getElementById('startBtn').textContent =
-    unlockedCount >= 10 ? '▶ Play Level 10!' : '▶ Play Level ' + next + '!';
+    unlockedCount >= LEVELS ? '▶ Play Level ' + LEVELS + '!' : '▶ Play Level ' + next + '!';
   document.getElementById('mapCap').textContent =
-    unlockedCount >= 10 ? '🎉 You unlocked ALL the magic! Play any level!'
+    unlockedCount >= LEVELS ? '🎉 You unlocked ALL the magic! Play any level!'
     : unlockedCount > 0 ? 'Your magic so far — win more levels for more!'
     : 'Win a level to unlock new magic!';
   const map = document.getElementById('levelMap');
   map.innerHTML = '';
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= LEVELS; i++) {
     const b = document.createElement('button');
     b.className = 'lvlbtn';
     if (i <= unlockedCount) {
@@ -803,7 +811,7 @@ function startGame(n) {
   }
 }
 document.getElementById('startBtn').addEventListener('click', () =>
-  startGame(Math.min(unlockedCount + 1, 10)));
+  startGame(Math.min(unlockedCount + 1, LEVELS)));
 
 function showTitle() {
   state = 'title';
@@ -835,7 +843,7 @@ document.getElementById('pauseBtn').addEventListener('click', () => {
   else if (state === 'pause') resumeGame();
 });
 document.getElementById('nextBtn').addEventListener('click', () =>
-  startGame(Math.min(currentLevel + 1, 10)));
+  startGame(Math.min(currentLevel + 1, LEVELS)));
 function hideResetConfirm() {
   document.getElementById('resetConfirm').classList.add('hidden');
   document.getElementById('resetLink').classList.remove('hidden');
@@ -885,7 +893,7 @@ function startWin() {
   if (winWasNew) unlockedCount = currentLevel;
   if (stars.length > 0 && got >= stars.length) perfectMask |= 1 << (currentLevel - 1);
   saveProgress();
-  finale = currentLevel === 10;
+  finale = currentLevel === LEVELS;
   if (finale) {
     finaleStart = {x: player.x, y: player.y};
     finaleTrail.length = 0;
@@ -933,7 +941,7 @@ function update(dt, t) {
 
     let move = 0;
     if (state === 'play') move = (keys.l ? -1 : 0) + (keys.r ? 1 : 0);
-    const target = move * RUN;
+    const target = move * runSpeed();
     player.vx = lerp(player.vx, target, Math.min(1, dt * 14));
     if (move) { player.facing = move; }
     if (Math.abs(player.vx) > 40 && player.onGround) player.anim += dt * 11;
@@ -1189,6 +1197,14 @@ function update(dt, t) {
       b.ox = clamp(lerp(b.ox, 0, home), -170, 170);
       b.oy = clamp(lerp(b.oy, 0, home), -170, 60);
     }
+  }
+
+  updateBirds(t, dt);
+
+  if (hasMagic(11)) {                  // Cloud Buddy paddles along after Lily
+    const h = buddyHome();
+    buddy.x = lerp(buddy.x, h.x, Math.min(1, dt * 2.4));
+    buddy.y = lerp(buddy.y, h.y, Math.min(1, dt * 3));
   }
 
   if (cloudGone) {
@@ -1667,11 +1683,12 @@ const BIRD_COLS = [
   ['#c9a6ff','#a97ff0','#e9dcff'],  // lavender
 ];
 
-// one little bird, flying leftward
-function drawBird(t, bx, by, s, col, ph, sparkly) {
-  const flap = Math.sin(t * 7 + ph);
+// one little bird, flying leftward (panic 0..1 = someone just flew through us!)
+function drawBird(t, bx, by, s, col, ph, sparkly, panic = 0) {
+  const flap = Math.sin(t * (7 + panic * 13) + ph);   // startled wings beat like crazy
   ctx.save();
   ctx.translate(bx, by);
+  ctx.rotate(Math.sin(t * 17 + ph) * 0.28 * panic);   // and the whole bird wobbles
   ctx.scale(-s, s);
   // tail
   ctx.fillStyle = col[1];
@@ -1704,9 +1721,9 @@ function drawBird(t, bx, by, s, col, ph, sparkly) {
   ctx.fillStyle = col[2];
   ctx.beginPath(); ctx.ellipse(0, -8, 2.6, 5.5, 0, 0, 7); ctx.fill();
   ctx.restore();
-  // eye + cheek
+  // eye + cheek (eyes go wide when startled)
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(9.2, -5.8, 2.4, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(9.2, -5.8, 2.4 + panic * 1.2, 0, 7); ctx.fill();
   ctx.fillStyle = '#3a2b4d';
   ctx.beginPath(); ctx.arc(9.8, -5.8, 1.3, 0, 7); ctx.fill();
   ctx.fillStyle = 'rgba(255,140,180,0.4)';
@@ -1727,35 +1744,89 @@ function drawBird(t, bx, by, s, col, ph, sparkly) {
   }
 }
 
-function drawBirds(t) {
-  setLayer(0.55);
+// birds come from a formula instead of a list, so each flock's "eek!" is kept here
+const birdFlocks = new Map();
+function flockState(k) {
+  let f = birdFlocks.get(k);
+  if (!f) { f = {ox:0, oy:0, vx:0, vy:0, startled:0, puff:0, seen:0}; birdFlocks.set(k, f); }
+  return f;
+}
+
+// visit every bird in the sky right now -- shared by the drawing and the bumping
+function forEachBird(t, fn) {
   const drift = t * 22;
   const off = camX * 0.55 + drift;
   const k0 = Math.floor(off / 650) - 1;
   const n = Math.ceil(viewW / 650) + 3;
-  ctx.globalAlpha = 1 - nightAmt * 0.9;     // the birds go home at night
   for (let i = 0; i < n; i++) {
     const k = k0 + i;
     if (hash(k * 7) < 0.3) continue;
-    const gx = k * 650 + hash(k * 3) * 280 - drift;
-    const gy = 64 + hash(k * 9) * 140;
+    const f = flockState(k);
+    f.seen = t;
+    const gx = k * 650 + hash(k * 3) * 280 - drift + f.ox;
+    const gy = 64 + hash(k * 9) * 140 + f.oy;
     const col = BIRD_COLS[Math.floor(hash(k * 19) * BIRD_COLS.length)];
     const size = 0.85 + hash(k * 23) * 0.5;
     const sparkly = hash(k * 31) > 0.75;    // a few leave fairy dust
     const m = 1 + Math.floor(hash(k * 13) * 5);
+    const spread = 1 + f.puff * 1.7;        // a spooked flock breaks formation
     for (let j = 0; j < m; j++) {
       // tidy V formation trailing behind the leader
       const side = j % 2 ? 1 : -1;
       const rank = Math.ceil(j / 2);
       const bob = Math.sin(t * 1.5 + k + j * 0.7) * 5;
-      drawBird(t,
-        gx + rank * 30,
-        gy + side * rank * 13 + bob,
-        size * (j === 0 ? 1.12 : 0.94),
-        col, k + j * 1.3, sparkly && j === 0);
+      const scatter = f.puff * Math.sin(k * 2.7 + j * 2.3) * 24;
+      fn(gx + rank * 30 * spread,
+         gy + side * rank * 13 * spread + bob + scatter,
+         size * (j === 0 ? 1.12 : 0.94),
+         col, k + j * 1.3, sparkly && j === 0, f);
     }
   }
+}
+
+function drawBirds(t) {
+  setLayer(0.55);
+  ctx.globalAlpha = 1 - nightAmt * 0.9;     // the birds go home at night
+  forEachBird(t, (bx, by, s, col, ph, sparkly, f) =>
+    drawBird(t, bx, by, s, col, ph, sparkly, f.puff));
   ctx.globalAlpha = 1;
+}
+
+// Lily jumped straight through a flock: scatter them, then let them regroup
+function updateBirds(t, dt) {
+  if ((state === 'play' || state === 'win') && nightAmt < 0.85) {
+    const px = player.x - camX, py = player.y - 14;        // birds fly in a far-off layer,
+    forEachBird(t, (bx, by, s, col, ph, sparkly, f) => {   // so bump them where they LOOK
+      const dx = (bx - camX * 0.55) - px, dy = by - py;
+      const d2 = dx*dx + dy*dy;
+      if (d2 > 56*56) return;
+      const d = Math.sqrt(d2) || 1;
+      f.vx = (dx / d) * 210 + player.vx * 0.3;
+      f.vy = (dy / d) * 150 - 110;          // mostly they shoot upward
+      if (f.startled <= 0) {
+        tone(1750, 0.07, 'sine', 0.05, 0, 2500);           // a squeaky little chirp
+        tone(2300, 0.06, 'sine', 0.04, AC ? AC.currentTime + 0.09 : 0, 3000);
+        const wx = bx + camX * 0.45;        // sparkles live in Lily's layer
+        burst(wx, by, 5, () => ({
+          x: wx + Math.random()*18-9, y: by + Math.random()*18-9,
+          vx: Math.random()*70-35, vy: -(20 + Math.random()*60),
+          size: 2, color: Math.random() < 0.5 ? col[0] : col[2], life: 0.55, type:'star'
+        }));
+      }
+      f.startled = 1;
+    });
+  }
+  for (const [k, f] of birdFlocks) {
+    f.startled = Math.max(0, f.startled - dt * 1.4);
+    f.puff = lerp(f.puff, f.startled, Math.min(1, dt * 14));
+    f.ox += f.vx * dt; f.oy += f.vy * dt;
+    const damp = Math.pow(0.12, dt);
+    f.vx *= damp; f.vy *= damp;
+    const home = Math.min(1, dt * 0.7);     // then drift calmly back into line
+    f.ox = clamp(lerp(f.ox, 0, home), -260, 260);
+    f.oy = clamp(lerp(f.oy, 0, home), -170, 170);
+    if (t - f.seen > 4) birdFlocks.delete(k);   // flocks left far behind are forgotten
+  }
 }
 
 function drawSkySparkles(t) {
@@ -1819,16 +1890,73 @@ function drawButterflies(t) {
 
 function drawRainbow() {
   setLayer(1);
-  const colors = ['#ff5f5f','#ffb14d','#ffe94d','#6fdc6f','#5fb8ff','#b38fff'];
   ctx.lineWidth = 12;
   ctx.globalAlpha = 0.75;
-  for (let i = 0; i < colors.length; i++) {
-    ctx.strokeStyle = colors[i];
+  for (let i = 0; i < RAINBOW.length; i++) {
+    ctx.strokeStyle = RAINBOW[i];
     ctx.beginPath();
     ctx.arc(crystal.x, 560, 330 - i * 12, Math.PI, 2 * Math.PI);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
+}
+
+// touched the diamond! its magic streams into Lily as a rainbow of sparkles
+function drawMagicFlow(t) {
+  if (state !== 'win') return;
+  const fade = clamp(winT / 0.25, 0, 1) * clamp((2.7 - winT) / 0.6, 0, 1);
+  if (fade <= 0) return;
+  setLayer(1);
+  const cx = crystal.x, cy = crystalY(t);
+  const px = player.x, py = player.y - 30;          // about Lily's heart
+  const dx = px - cx, dy = py - cy;
+  const len = Math.hypot(dx, dy) || 1;
+  let nx = -dy / len, ny = dx / len;                // sideways from the stream...
+  if (ny > 0) { nx = -nx; ny = -ny; }               // ...so the bow always curves upward
+  const bow = 45 + Math.max(0, 150 - len) * 0.5;    // stand close and it arcs higher
+  const point = (u, band) => {
+    const arc = Math.sin(u * Math.PI);              // pinched at the diamond and at Lily
+    const w = band * arc + Math.sin(u * 7 - t * 9 + band) * 7 * arc;
+    return [cx + dx * u + nx * w, cy + dy * u + ny * w - arc * bow];
+  };
+  // a rainbow river of sparkles: each one sets off from the diamond, curves through
+  // the air and shrinks away as Lily drinks it in
+  const LANES = RAINBOW.length, PER = 8;
+  for (let i = 0; i < LANES; i++) {
+    const band = (i - (LANES - 1) / 2) * 13;
+    for (let j = 0; j < PER; j++) {
+      const u = (t * 0.5 + j / PER + i * 0.037) % 1;
+      const tw = 0.55 + 0.45 * Math.sin(t * 9 + i * 2.1 + j * 1.7);   // twinkle
+      const sz = (2.2 + 5 * (1 - u)) * tw;                            // smaller the closer it gets
+      const a = fade * clamp(u * 9, 0, 1) * clamp((1 - u) * 9, 0, 1);
+      const wob = band + Math.sin(t * 2.5 + i * 2 + j) * 4;
+      ctx.fillStyle = (i + j) % 4 === 0 ? '#fff' : RAINBOW[i];
+      for (let g = 0; g < 2; g++) {              // a faint twin just behind = comet tail
+        const uu = u - g * 0.022;
+        if (uu <= 0) continue;
+        ctx.globalAlpha = a * (g ? 0.3 : 1);
+        const [x, y] = point(uu, wob);
+        starPath(x, y, sz * (g ? 0.6 : 1));
+        ctx.fill();
+      }
+    }
+  }
+  // rings closing in on Lily -- the magic sinking in
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 3; i++) {
+    const u = (t * 1.1 + i / 3) % 1;
+    ctx.globalAlpha = fade * 0.3 * u;
+    ctx.strokeStyle = '#fff';
+    ctx.beginPath(); ctx.arc(px, py + 4, 80 * (1 - u) + 14, 0, 7); ctx.stroke();
+  }
+  // and a soft glow all around her
+  const hue = (t * 120) % 360;
+  const gl = ctx.createRadialGradient(px, py + 4, 4, px, py + 4, 76);
+  gl.addColorStop(0, 'hsla(' + hue + ',100%,85%,' + (0.5 * fade).toFixed(2) + ')');
+  gl.addColorStop(1, 'hsla(' + hue + ',100%,85%,0)');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = gl;
+  ctx.beginPath(); ctx.arc(px, py + 4, 76, 0, 7); ctx.fill();
 }
 
 function drawPlatforms(t) {
@@ -1930,6 +2058,9 @@ function starPath(x, y, r) {
   ctx.closePath();
 }
 
+// where the diamond is floating right now (it rises once the level is won)
+const crystalY = t => crystal.y + (rainbow ? -30 - Math.min(30, winT * 20) : 0) + Math.sin(t * 2) * 5;
+
 function drawCrystal(t) {
   setLayer(1);
   const px = crystal.x, py = plats[plats.length-1].y;
@@ -1939,7 +2070,7 @@ function drawCrystal(t) {
   ctx.fillStyle = '#9d7ac9';
   rounded(px - 46, py - 10, 92, 12, 6); ctx.fill();
 
-  const cy = crystal.y + (rainbow ? -30 - Math.min(30, winT * 20) : 0) + Math.sin(t * 2) * 5;
+  const cy = crystalY(t);
   const pulse = 1 + 0.06 * Math.sin(t * 3);
   const hue = (t * 60) % 360;
 
@@ -2220,7 +2351,7 @@ function drawWingFan(col, edge) {
 
 function drawUnicorn(x, y, t, opts) {
   const o = Object.assign({facing:1, anim:0, onGround:true, vy:0, squash:0, rainbow:false, sitting:false,
-                           wings:false, crown:false, fullMagic:false, gliding:false}, opts);
+                           wings:false, crown:false, fullMagic:false, gliding:false, boots:false}, opts);
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(o.facing, 1);
@@ -2256,6 +2387,32 @@ function drawUnicorn(x, y, t, opts) {
     ctx.fill();
   }
 
+  // Super Bounce: a chunky rainbow shoe on every hoof
+  function shoe(fx, fy, ang, near) {
+    const hue = (t * 200) % 360;
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(ang);
+    ctx.globalAlpha = near ? 1 : 0.85;      // the far pair sits back in the shade
+    const g = ctx.createRadialGradient(0, 0, 1, 0, 0, 13);   // extra glow mid-bounce
+    g.addColorStop(0, 'hsla(' + hue + ',100%,75%,' + (o.onGround ? 0.22 : 0.45) + ')');
+    g.addColorStop(1, 'hsla(' + hue + ',100%,75%,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+    ctx.save();                             // rainbow stripes, trimmed to the shoe
+    rounded(-6, -3.6, 12, 6.6, 2.6); ctx.clip();
+    for (let i = 0; i < RAINBOW.length; i++) {
+      ctx.fillStyle = RAINBOW[i];
+      ctx.fillRect(-6 + i * 2, -3.6, 2.05, 6.6);
+    }
+    ctx.restore();
+    ctx.fillStyle = '#fff';                 // bouncy white sole
+    rounded(-6.6, 1.8, 13.2, 3, 1.5); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.ellipse(-2.4, -1.6, 2.2, 1.1, -0.3, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
   // legs
   function leg(hx, hy, phase, color) {
     let ang;
@@ -2266,8 +2423,12 @@ function drawUnicorn(x, y, t, opts) {
     const fx = hx + Math.sin(ang) * 15, fy = hy + Math.cos(ang) * (o.sitting ? 8 : 15);
     ctx.strokeStyle = color; ctx.lineWidth = 7; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(fx, fy); ctx.stroke();
-    ctx.fillStyle = '#d9a7ff';
-    ctx.beginPath(); ctx.arc(fx, fy + 1, 3.6, 0, 7); ctx.fill();
+    if (o.boots) {
+      shoe(fx, fy, ang, color === '#ffffff');
+    } else {
+      ctx.fillStyle = '#d9a7ff';
+      ctx.beginPath(); ctx.arc(fx, fy + 1, 3.6, 0, 7); ctx.fill();
+    }
   }
   leg(-12, 7, Math.PI, '#efe2ff');      // far back
   leg(10, 7, Math.PI * 0.5, '#efe2ff'); // far front
@@ -2388,6 +2549,17 @@ function drawCloud(x, y, s, alpha) {
   ctx.restore();
 }
 
+// Cloud Buddy: a happy little cloud tagging along just behind Lily
+function drawCloudBuddy(t) {
+  setLayer(1);
+  const bob = Math.sin(t * 1.8) * 4;
+  drawCloud(buddy.x, buddy.y + bob, 0.5, 0.95);
+  ctx.fillStyle = '#fff';
+  ctx.globalAlpha = 0.3 + 0.35 * Math.sin(t * 3);
+  starPath(buddy.x + 19, buddy.y + bob - 16, 3); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
 function drawParticles() {
   setLayer(1);
   for (const q of parts) {
@@ -2437,15 +2609,18 @@ function render(t) {
   drawButterflies(t);
   drawFinaleFx();
   drawFinaleTrail();
+  drawMagicFlow(t);
 
   setLayer(1);
   const magicOpts = {
     rainbow: rainbow || hasMagic(2),
     wings: hasMagic(6),
+    boots: hasMagic(7),
     crown: hasMagic(9),
-    fullMagic: hasMagic(10),
+    fullMagic: hasMagic(LEVELS),
     gliding: !!player.gliding && state !== 'rescue',
   };
+  if (hasMagic(11) && state !== 'rescue') drawCloudBuddy(t);
   if (state === 'rescue') {
     if (rescueT >= 0.4) {
       drawCloud(player.x, player.y + 26, 1, 1);
@@ -2544,7 +2719,7 @@ function loop(now) {
 }
 
 // boot: build level 1 as the backdrop, show the title
-loadLevel(Math.min(unlockedCount + 1, 10));
+loadLevel(Math.min(unlockedCount + 1, LEVELS));
 refreshTitle();
 requestAnimationFrame(loop);
 
@@ -2555,7 +2730,7 @@ window.DEV = {
   state: () => state,
   win: startWin,
   level: n => startGame(n),
-  unlockAll: () => { unlockedCount = 10; saveProgress(); refreshTitle(); },
+  unlockAll: () => { unlockedCount = LEVELS; saveProgress(); refreshTitle(); },
   info: () => ({level: currentLevel, unlocked: unlockedCount, worldW, plats: plats.length, stars: stars.length}),
   buildLevel,
   bfly: i => decoBflies[i],

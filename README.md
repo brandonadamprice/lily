@@ -1,7 +1,7 @@
 # 🦄 Unicorn Quest: The Lost Magic
 
 A gentle platformer for little players (ages ~4+). Lily the unicorn's magic is
-scattered across **10 lava lands** — win each level to earn a piece of her
+scattered across **12 lava lands** — win each level to earn a piece of her
 magic back!
 
 ## Play it
@@ -48,7 +48,8 @@ it, no install or internet needed.
 - Collect **every star** in a level for a PERFECT ⭐ badge on the level map
 - Watch for the friendly lava fish leaping in the background
 - Colorful little birds fly past in V formations — and some magic ones trail
-  fairy dust behind them
+  fairy dust behind them. Jump right through a flock and they scatter with a
+  startled chirp, then drift back into line
 - Hearts! Little hearts pop out when Lily flutters, grabs a star or wins a
   level, they trail behind her gallop once Sparkle Trail is unlocked, and tiny
   ones twinkle away in the sky
@@ -58,10 +59,12 @@ it, no install or internet needed.
   every ~3 minutes — a smiley sun and sleepy moon arc across the sky, stars
   twinkle after dark, and shooting stars streak past. Each level starts at a
   different time of day
-- Beating level 10 triggers a grand finale: Lily flies a rainbow
+- Touch the crystal at the end of a level and its magic streams into Lily as a
+  rainbow river of sparkles
+- Beating level 12 triggers a grand finale: Lily flies a rainbow
   loop-the-loop with fireworks!
 
-## The 10 magic unlocks
+## The 12 magic unlocks
 
 | Level | Magic |
 |-------|-------|
@@ -71,10 +74,12 @@ it, no install or internet needed.
 | 4 | 🧲 Star Magnet |
 | 5 | 💫 Triple Flutter |
 | 6 | 🪽 Magic Wings — hold JUMP in the air to glide! |
-| 7 | 🦘 Super Bounce |
+| 7 | 🦘 Super Bounce — rainbow shoes on every hoof! |
 | 8 | 🌠 Glitter Gallop |
 | 9 | 👑 Star Crown |
-| 10 | 🔮 ALL the Magic! |
+| 10 | 🌟 Zoom Hooves — gallop super fast! |
+| 11 | ☁️ Cloud Buddy — a happy little cloud tags along |
+| 12 | 🔮 ALL the Magic! |
 
 Progress is saved in the browser (localStorage), so unlocked magic sticks
 between play sessions. The title screen has a tiny "start my magic over" link

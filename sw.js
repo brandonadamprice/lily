@@ -20,7 +20,7 @@
 //       .then(k => Promise.all(k.map(c => caches.delete(c))))
 //       .then(() => self.registration.unregister())));
 
-const CACHE = 'unicorn-quest-v1';
+const CACHE = 'unicorn-quest-v2';
 
 const CORE = [
   './',
