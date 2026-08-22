@@ -227,6 +227,15 @@
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
   .mapcap { font-size: 15px; color: #9a7fb8; margin-top: 10px; }
 
+  .starbox {
+    display: inline-block; margin: 8px 0 2px;
+    font-size: 17px; font-weight: 500; color: #9a6a00;
+    background: linear-gradient(180deg, #fffbe6, #ffeaa8);
+    border: 2.5px solid #fff; border-radius: 999px; padding: 6px 18px;
+    box-shadow: 0 3px 0 rgba(214,164,30,.35);
+  }
+  .starbox b { color: #d02c9e; }
+
   /* ---------- the Decorator ---------- */
   .dressrow {
     display: flex; gap: 20px; align-items: flex-start;
@@ -345,6 +354,7 @@
     .dressrow { gap: 14px; }
     #dressScreen .card { max-width: min(720px, 96vw); }
     .mapcap { font-size: 13px; margin-top: 6px; }
+    .starbox { font-size: 15px; padding: 5px 14px; margin: 5px 0 2px; }
     .tiny { margin-top: 8px; }
     #unlockBox { font-size: 18px; padding: 8px 20px; margin: 2px 0 8px; border-width: 2px; }
     #unlockTip { font-size: 14px; margin: -2px 0 6px; }
@@ -404,6 +414,7 @@
     <div class="tcol">
       <div class="levelmap" id="levelMap"></div>
       <div class="mapcap" id="mapCap">Win a level to unlock new magic!</div>
+      <div class="starbox" id="starCap"></div>
       <div class="keys">⬅ ➡ run &nbsp;•&nbsp; ⬆ or SPACE to jump &nbsp;•&nbsp; jump again in the air to flutter ✨</div>
       <div id="installRow" class="hidden">
         <button class="smallbtn hidden" id="installBtn">📲 Install Unicorn Quest</button>
@@ -428,6 +439,7 @@
     <span class="bigmoji">🦄</span>
     <h1>Paused</h1>
     <p>Lily is taking a little rest…</p>
+    <div class="starbox" id="pauseStars"></div><br>
     <button class="playbtn" id="resumeBtn">▶ Keep Playing!</button><br>
     <button class="smallbtn" id="restartBtn">🔁 Restart Level</button>
     <button class="smallbtn" id="pmapBtn">🗺️ Choose a level</button>
@@ -440,6 +452,7 @@
     <div id="winDance" class="hidden"><span>🦄</span> <span>💖</span> <span>🦄</span></div>
     <h1 id="winTitle">Level complete!</h1>
     <p id="winMsg"></p>
+    <div class="starbox" id="winStars"></div>
     <div id="unlockBox"></div>
     <div id="unlockTip"></div>
     <button class="playbtn" id="nextBtn">▶ Next Level!</button><br>
@@ -452,6 +465,7 @@
 <div id="dressScreen" class="overlay hidden">
   <div class="card">
     <h1>Decorate Lily</h1>
+    <div class="starbox" id="dressStars"></div>
     <div class="dressrow">
       <div>
         <canvas id="dressPreview" width="460" height="460"></canvas>
@@ -598,7 +612,17 @@ const COSMETICS = [
   {id:'aura.shimmer',slot:'aura', lvl:12, icon:'🔮', name:'Shimmer',       kind:'soft', col:'255,220,255'},
   {id:'aura.rbow',   slot:'aura', lvl:34, icon:'🌈', name:'Rainbow Ring',  kind:'ring'},
   {id:'aura.all',    slot:'aura', lvl:50, icon:'⭐', name:'ALL the Magic!',kind:'soft', flow:true, horn:true, big:true},
+
+  // ---- star treasures: earned by collecting stars, not by reaching a level.
+  // They sit last in their slot so they never become the default outfit.
+  {id:'crown.halo',  slot:'crown', lvl:0, stars:50,   icon:'😇', name:'Star Halo',   kind:'halo'},
+  {id:'mane.aurora', slot:'mane',  lvl:0, stars:150,  icon:'🌠', name:'Aurora',      cols:['#7ef0d0','#8fd0ff','#b28fff','#7ee0ff','#a8ffe0'], twinkle:true},
+  {id:'shoes.cloud', slot:'shoes', lvl:0, stars:350,  icon:'☁️', name:'Cloud Shoes', kind:'cloud'},
+  {id:'buddy.fairy', slot:'buddy', lvl:0, stars:650,  icon:'🧚', name:'Star Fairy',  kind:'fairy'},
+  {id:'wings.ice',   slot:'wings', lvl:0, stars:1000, icon:'❄️', name:'Crystal',     kind:'fan', col:'#dff2ff', edge:'rgba(95,184,255,0.9)', far:'#eef8ff', faredge:'rgba(95,184,255,0.6)', sparkle:true},
+  {id:'aura.storm',  slot:'aura',  lvl:0, stars:0,    icon:'💫', name:'Star Storm',  kind:'storm'},
 ];
+const TREASURES = COSMETICS.filter(c => 'stars' in c);
 
 const COS = {};
 for (const c of COSMETICS) COS[c.id] = c;
@@ -606,8 +630,14 @@ const slotItems = k => COSMETICS.filter(c => c.slot === k);
 // what a level hands over: a power, a cosmetic, or (levels 6 and 7) both
 const rewardAt = lvl => ({power: POWERS.find(p => p.lvl === lvl), cos: COSMETICS.find(c => c.lvl === lvl)});
 
-let unlockedCount = 0, perfectMask = 0;
+let unlockedCount = 0;
+let oldPerfectMask = 0;              // only read, to carry pre-treasure saves across
+let bestStars = [];                  // most stars ever collected in each level
+let seedStars = false;               // true when an older save needs its history filled in
 let look = {};                       // slot -> cosmetic id: what Lily is wearing
+const starTotal = () => bestStars.reduce((a, b) => a + (b || 0), 0);
+// unlocked by reaching a level, or by collecting enough stars
+const owns = c => c.lvl <= unlockedCount && (!c.stars || starTotal() >= c.stars);
 function defaultLook() {
   const l = {};
   for (const sl of SLOTS) l[sl.key] = slotItems(sl.key)[0].id;
@@ -616,7 +646,7 @@ function defaultLook() {
 function bestLook() {                // wear the newest thing unlocked in each slot
   const l = defaultLook();
   for (const sl of SLOTS) {
-    const best = slotItems(sl.key).filter(c => c.lvl <= unlockedCount).pop();
+    const best = slotItems(sl.key).filter(owns).pop();
     if (best) l[sl.key] = best.id;
   }
   return l;
@@ -625,12 +655,15 @@ function tidyLook() {                // never wear something that is not unlocke
   const d = defaultLook();
   for (const sl of SLOTS) {
     const c = COS[look[sl.key]];
-    if (!c || c.slot !== sl.key || c.lvl > unlockedCount) look[sl.key] = d[sl.key];
+    if (!c || c.slot !== sl.key || !owns(c)) look[sl.key] = d[sl.key];
   }
 }
 try {
   unlockedCount = Math.min(LEVELS, +localStorage.getItem('uq_magic') || 0);
-  perfectMask = +localStorage.getItem('uq_perfect') || 0;
+  oldPerfectMask = +localStorage.getItem('uq_perfect') || 0;
+  const savedStars = localStorage.getItem('uq_stars');
+  bestStars = savedStars ? (JSON.parse(savedStars) || []) : [];
+  seedStars = !savedStars && unlockedCount > 0;   // a save from before stars counted
   // a save from before the Decorator existed has no outfit -- dress her in
   // everything she already earned rather than stripping her back to plain
   const savedLook = localStorage.getItem('uq_look');
@@ -640,7 +673,7 @@ tidyLook();
 function saveProgress() {
   try {
     localStorage.setItem('uq_magic', unlockedCount);
-    localStorage.setItem('uq_perfect', perfectMask);
+    localStorage.setItem('uq_stars', JSON.stringify(bestStars));
     localStorage.setItem('uq_look', JSON.stringify(look));
   } catch (e) {}
 }
@@ -754,6 +787,33 @@ function buildLevel(n) {
   };
 }
 
+// How many stars each level holds, counted once at boot. PERFECT is simply
+// "you have them all", which also means it works past level 32 -- the old
+// `1 << (level-1)` bitmask silently wrapped around and lit up level 1 again.
+const STARS_IN = [];
+let STAR_TOTAL = 0;
+for (let n = 1; n <= LEVELS; n++) {
+  const c = buildLevel(n).stars.length;
+  STARS_IN.push(c);
+  STAR_TOTAL += c;
+}
+const isPerfect = n => STARS_IN[n - 1] > 0 && (bestStars[n - 1] || 0) >= STARS_IN[n - 1];
+// The last treasure asks for most of them, but not every single one -- hunting
+// down a final missing star in level 31 is not a fun evening for a five-year-old.
+COS['aura.storm'].stars = Math.round(STAR_TOTAL * 0.85);
+
+// Saves from before star treasures existed never recorded stars, so all that
+// collecting would read as zero. Credit what we can prove -- a PERFECT level
+// really did find every one -- and give the other finished levels a fair share.
+// Guessing low is the safe way round: replaying a level can only raise its best.
+if (seedStars) {
+  for (let n = 1; n <= Math.min(unlockedCount, LEVELS); n++) {
+    const wasPerfect = n <= 32 && (oldPerfectMask & (1 << (n - 1)));
+    bestStars[n - 1] = wasPerfect ? STARS_IN[n - 1] : Math.round(STARS_IN[n - 1] * 0.6);
+  }
+  saveProgress();
+}
+
 // ---------- player ----------
 const player = {
   x:60, y:410, vx:0, vy:0, hw:20, hh:20,
@@ -770,6 +830,7 @@ let cloudGone = null;
 let winT = 0, winShown = false, winWasNew = false, rainbow = false;
 let confettiTimer = 0;
 let finale = false, finaleStart = {x:0, y:0}, finaleTrail = [], fwTimer = 0;
+let wonTreasures = [];               // star treasures unlocked by the run just finished
 const buddy = {x: 60, y: 350};    // Cloud Buddy's spot, always drifting after Lily
 function buddyHome() { return {x: player.x - player.facing * 54, y: player.y - 62}; }
 
@@ -843,16 +904,29 @@ let AC = null, master = null, muted = false;
 let nextNote = 0, noteIdx = 0;
 const SCALE_F = [523.25, 587.33, 659.25, 783.99, 880, 1046.5]; // C D E G A C' (pentatonic)
 const BEAT = 0.3;
-// 16 bars x 4 steps (-1 = rest), phrased A A' B C so it doesn't feel loopy
+// 32 bars x 4 steps (-1 = rest). Eight four-bar phrases: the first half is the
+// tune you know, the second half wanders somewhere new and walks back home, so
+// a full pass takes ~38s (and ~77s before the octave answer comes round again).
 const MELODY = [
+  // --- the first half: A A' B C ---
   2,3,4,3,  2,1,0,-1,  1,2,3,2,  1,0,1,-1,
   3,4,5,4,  3,2,3,-1,  4,3,2,1,  0,-1,-1,-1,
   2,3,4,3,  2,1,0,-1,  0,1,2,3,  2,1,0,-1,
-  4,5,4,3,  2,3,4,-1,  3,2,1,2,  0,-1,-1,-1
+  4,5,4,3,  2,3,4,-1,  3,2,1,2,  0,-1,-1,-1,
+  // --- D: up high and airy, with room to breathe ---
+  5,-1,4,5, 3,-1,2,3,  4,-1,3,4,  2,-1,1,-1,
+  // --- E: a question, and its answer ---
+  1,2,3,4,  5,-1,4,-1,  3,4,5,4,  3,2,-1,-1,
+  // --- F: skippy little hops ---
+  0,2,1,3,  2,4,3,5,   4,3,2,3,  1,-1,0,-1,
+  // --- G: back down the hill to where we started ---
+  2,3,4,5,  4,3,2,1,   2,1,0,1,  0,-1,-1,-1
 ];
-const BASS_ROOTS = [ // one root per bar: C A F G ... F G C C
+const BASS_ROOTS = [ // one root per bar: C A F G ... and home on C C
   130.81,110.00,174.61,196.00, 130.81,110.00,174.61,196.00,
-  130.81,110.00,174.61,196.00, 174.61,196.00,130.81,130.81
+  130.81,110.00,174.61,196.00, 174.61,196.00,130.81,130.81,
+  110.00,174.61,130.81,196.00, 174.61,130.81,196.00,110.00,
+  130.81,196.00,110.00,174.61, 174.61,196.00,130.81,130.81
 ];
 
 function initAudio() {
@@ -995,6 +1069,7 @@ function refreshTitle() {
     : 'Win a level to unlock new magic!';
   document.getElementById('dressBtn').textContent =
     unlockedCount > 0 ? '🎀 Decorate Lily' : '🎀 Meet Lily';
+  showStarBoxes();
   const map = document.getElementById('levelMap');
   map.innerHTML = '';
   const here = Math.min(unlockedCount + 1, LEVELS);
@@ -1008,7 +1083,7 @@ function refreshTitle() {
       const rw = rewardAt(i), win = rw.cos || rw.power;
       b.textContent = win ? win.icon : '⭐';
       b.title = 'Level ' + i + (win ? ' — ' + win.name : '');
-      if (perfectMask & (1 << (i - 1))) b.classList.add('perfect');
+      if (isPerfect(i)) b.classList.add('perfect');
     } else if (i === unlockedCount + 1) {
       b.classList.add('next');
       b.textContent = '▶';
@@ -1078,6 +1153,7 @@ function pauseGame() {
   if (state !== 'play') return;
   state = 'pause';
   keys.l = keys.r = false;
+  showStarBoxes();
   document.getElementById('pauseScreen').classList.remove('hidden');
   fitCards();
 }
@@ -1108,10 +1184,26 @@ document.getElementById('resetLink').addEventListener('click', () => {
 });
 document.getElementById('resetNo').addEventListener('click', hideResetConfirm);
 document.getElementById('resetYes').addEventListener('click', () => {
-  unlockedCount = 0; perfectMask = 0; look = defaultLook(); saveProgress();
+  unlockedCount = 0; bestStars = []; look = defaultLook();
+  try { localStorage.removeItem('uq_perfect'); } catch (e) {}
+  saveProgress();
   hideResetConfirm();
   refreshTitle();
 });
+
+// how the star hoard is doing, and what it is working towards
+function starText() {
+  const tot = starTotal();
+  const next = TREASURES.find(c => c.stars > tot);
+  return '⭐ <b>' + tot + '</b> stars' +
+    (next ? ' — <b>' + (next.stars - tot) + '</b> more for a star treasure!'
+          : ' — every star treasure is yours!');
+}
+function showStarBoxes() {
+  for (const id of ['starCap', 'pauseStars', 'winStars', 'dressStars']) {
+    document.getElementById(id).innerHTML = starText();
+  }
+}
 
 // ---------- the Decorator: pick one thing per slot ----------
 let dressing = false, dressFrom = 'title';
@@ -1130,11 +1222,17 @@ function buildDecorator() {
     for (const it of slotItems(sl.key)) {
       const b = document.createElement('button');
       b.className = 'pick';
-      if (it.lvl > unlockedCount) {
+      if (!owns(it)) {
         b.classList.add('locked');
-        b.textContent = '🔒';
-        b.disabled = true;
-        b.title = 'Win level ' + it.lvl + ' to get this!';
+        b.textContent = it.stars ? '⭐' : '🔒';
+        const need = it.stars
+          ? it.name + ': collect ' + it.stars + ' stars — ' + (it.stars - starTotal()) + ' to go!'
+          : it.name + ': win level ' + it.lvl + ' to get this!';
+        b.title = need;
+        b.addEventListener('click', () => {      // tapping tells you how to earn it
+          document.getElementById('dressCap').textContent = need;
+          tone(320, 0.1, 'sine', 0.06, 0, 260);
+        });
       } else {
         b.textContent = it.icon;
         b.title = it.name;
@@ -1160,6 +1258,7 @@ function openDecorator(from) {
   dressFrom = from;
   dressing = true;
   document.getElementById(from === 'win' ? 'winScreen' : 'title').classList.add('hidden');
+  showStarBoxes();
   document.getElementById('dressCap').textContent = 'Tap a picture to try it on!';
   buildDecorator();
   document.getElementById('dressScreen').classList.remove('hidden');
@@ -1252,7 +1351,12 @@ function startWin() {
     const c = rewardAt(currentLevel).cos;
     if (c) look[c.slot] = c.id;        // she puts her new thing on right away
   }
-  if (stars.length > 0 && got >= stars.length) perfectMask |= 1 << (currentLevel - 1);
+  // only her best run in each level counts, so replaying can add stars but never farm them
+  const starsBefore = starTotal();
+  if (got > (bestStars[currentLevel - 1] || 0)) bestStars[currentLevel - 1] = got;
+  const starsNow = starTotal();
+  wonTreasures = TREASURES.filter(c => c.stars > starsBefore && c.stars <= starsNow);
+  for (const c of wonTreasures) look[c.slot] = c.id;   // she wears a treasure straight away
   saveProgress();
   finale = currentLevel === LEVELS;
   if (finale) {
@@ -1276,7 +1380,11 @@ function showWinCard() {
   document.getElementById('winMsg').innerHTML =
     (finale ? 'Lily is the most magical unicorn ever! 🦄<br>' : '') +
     'You collected <b>' + got + '</b> stars! ⭐' +
-    (perfect ? '<br>🌟 <b>PERFECT!</b> You found every star!' : '');
+    (perfect ? '<br>🌟 <b>PERFECT!</b> You found every star!' : '') +
+    (wonTreasures.length
+      ? '<br>🎁 <b>STAR TREASURE!</b> ' +
+        wonTreasures.map(c => c.icon + ' ' + c.name).join(' and ') + '!'
+      : '');
   const bits = [];
   if (r.power) bits.push(r.power.icon + ' ' + r.power.name);
   if (r.cos) bits.push(r.cos.icon + ' ' + r.cos.name);
@@ -1289,6 +1397,7 @@ function showWinCard() {
   document.getElementById('nextBtn').classList.toggle('hidden', finale);
   document.getElementById('nextHint').classList.toggle('hidden', finale);
   document.getElementById('mapBtn').textContent = finale ? '🦄 Choose a level' : '🗺️ Choose a level';
+  showStarBoxes();
   if (perfect) sPerfect();
   document.getElementById('winScreen').classList.remove('hidden');
   fitCards();
@@ -2805,6 +2914,19 @@ function drawHat(item, t) {
     ctx.fillStyle = item.col;
     ctx.beginPath(); ctx.arc(0, 0, 2.8, 0, 7); ctx.fill(); ctx.stroke();
     ctx.restore();
+  } else if (item.kind === 'halo') {
+    const hy = -42 + Math.sin(t * 2) * 1.6;
+    ctx.strokeStyle = 'rgba(255,232,140,0.95)'; ctx.lineWidth = 3.2;
+    ctx.beginPath(); ctx.ellipse(15, hy, 11, 3.4, 0, 0, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.ellipse(15, hy, 11, 3.4, 0, 0, 7); ctx.stroke();
+    for (let i = 0; i < 3; i++) {                 // sparkles riding the ring
+      const a = t * 1.6 + i * 2.094;
+      ctx.globalAlpha = 0.45 + 0.55 * Math.sin(t * 4 + i * 2);
+      ctx.fillStyle = '#fff';
+      starPath(15 + Math.cos(a) * 11, hy + Math.sin(a) * 3.4, 1.9); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   } else if (item.kind === 'party') {
     ctx.save();
     ctx.translate(12, -30);
@@ -2864,6 +2986,22 @@ function drawUnicorn(x, y, t, opts) {
       ctx.globalAlpha = 0.5 + 0.5 * tw;
       ctx.fillStyle = o.aura.flow ? hsl(t, 90, i * 60) : '#ffffff';
       starPath(Math.cos(a) * (r * 0.85), -8 + Math.sin(a) * (r * 0.55), 2.2 + tw * 2.2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (o.aura.kind === 'storm') {
+    const c = 'hsla(' + ((t * 70) % 360) + ',95%,82%,';
+    const gl = ctx.createRadialGradient(0, -8, 4, 0, -8, 58);
+    gl.addColorStop(0, c + '0.34)');
+    gl.addColorStop(1, c + '0)');
+    ctx.fillStyle = gl;
+    ctx.beginPath(); ctx.arc(0, -8, 58, 0, 7); ctx.fill();
+    for (let i = 0; i < 9; i++) {                 // a whole sky of stars, wheeling round
+      const a = t * 0.9 + i * 0.698;
+      const rr = 30 + (i % 3) * 12;
+      ctx.globalAlpha = 0.4 + 0.6 * Math.sin(t * 3 + i * 1.7);
+      ctx.fillStyle = hsl(t, 120, i * 40);
+      starPath(Math.cos(a) * rr, -8 + Math.sin(a) * rr * 0.62, 2.2 + (i % 3));
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -2935,6 +3073,15 @@ function drawUnicorn(x, y, t, opts) {
       ctx.fillStyle = sh.trim;
       rounded(-6.6, 1.6, 13.2, 3.2, 1.6); ctx.fill();
       starPath(0, -1.4, 3.2); ctx.fill();
+    } else if (sh.kind === 'cloud') {
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.beginPath();
+      ctx.arc(-3.4, -0.4, 4.2, 0, 7);
+      ctx.arc(2.6, -1, 3.6, 0, 7);
+      ctx.arc(0.4, 1.8, 4, 0, 7);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(180,200,255,0.45)';   // a little shade underneath
+      ctx.beginPath(); ctx.ellipse(0, 3.4, 5.2, 1.7, 0, 0, 7); ctx.fill();
     } else if (sh.kind === 'jelly') {
       ctx.fillStyle = sh.col;
       rounded(-6, -3.6, 12, 7.6, 3.4); ctx.fill();
@@ -3134,6 +3281,32 @@ function drawBee(x, y, t) {
   ctx.restore();
 }
 
+// a glowing little star fairy, wings a blur
+function drawStarFairy(x, y, t) {
+  ctx.save();
+  ctx.translate(x, y);
+  const flap = 0.35 + Math.abs(Math.sin(t * 13)) * 0.65;
+  ctx.fillStyle = 'rgba(215,238,255,0.8)';
+  ctx.beginPath(); ctx.ellipse(-7, -4, 4.2 * flap, 8.5, -0.4, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(7, -4, 4.2 * flap, 8.5, 0.4, 0, 7); ctx.fill();
+  const gl = ctx.createRadialGradient(0, 0, 1, 0, 0, 14);
+  gl.addColorStop(0, 'rgba(255,240,185,0.8)');
+  gl.addColorStop(1, 'rgba(255,240,185,0)');
+  ctx.fillStyle = gl;
+  ctx.beginPath(); ctx.arc(0, 0, 14, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff6d0';
+  starPath(0, 0, 7.5); ctx.fill();
+  ctx.fillStyle = '#3a2b4d';
+  ctx.beginPath(); ctx.arc(-1.9, -0.8, 0.95, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(1.9, -0.8, 0.95, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#3a2b4d'; ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.arc(0, 0.5, 1.9, 0.35, Math.PI - 0.35); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,150,190,0.5)';
+  ctx.beginPath(); ctx.arc(-3.4, 1.2, 1.3, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(3.4, 1.2, 1.3, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
 // a tiny ladybug, wings twitching
 function drawLadybug(x, y, t) {
   ctx.save();
@@ -3173,6 +3346,8 @@ function drawBuddyAt(b, x, y, t, facing) {
     drawBee(x, y, t);
   } else if (b.kind === 'bug') {
     drawLadybug(x, y, t);
+  } else if (b.kind === 'fairy') {
+    drawStarFairy(x, y, t);
   } else if (b.kind === 'bird') {
     ctx.save();
     ctx.translate(x, y);

@@ -45,7 +45,8 @@ it, no install or internet needed.
   big arcs. Bump one mid-leap and it boops Lily up for a bonus bounce (they
   are never dangerous)
 - Land on a smiley **trampoline flower** for a super bounce (level 2+)
-- Collect **every star** in a level for a PERFECT ⭐ badge on the level map
+- Collect **every star** in a level for a PERFECT ⭐ badge on the level map —
+  and stars add up across the whole game towards **star treasures** (below)
 - Watch for the friendly lava fish leaping in the background
 - Colorful little birds fly past in V formations — and some magic ones trail
   fairy dust behind them. Jump right through a flock and they scatter with a
@@ -109,6 +110,32 @@ you tap. The number is the level that unlocks it; the rest she starts with.
 
 The level map is a strip you scroll, parked on the level you are up to.
 
+### Star treasures
+
+There are **1,677 stars** in the game (7 in level 1, up to 44 in the late ones).
+Only the best run in each level counts, so replaying can add stars but never
+farm the same ones twice — and the running total buys six extra-special outfits
+that no level hands out:
+
+| Stars | Treasure |
+|-------|----------|
+| 50 | 😇 Star Halo (hat) |
+| 150 | 🌠 Aurora (mane) |
+| 350 | ☁️ Cloud Shoes |
+| 650 | 🧚 Star Fairy (friend) |
+| 1000 | ❄️ Crystal (wings) |
+| 1425 | 💫 Star Storm (glow) |
+
+The total shows on the title screen, the pause and win cards, and in the
+Decorator, where a locked treasure tells you how many more stars it wants when
+you tap it. The last one is 85% of every star rather than all of them — hunting
+a final missing star in level 31 is nobody's idea of a fun evening.
+
+Saves made before treasures existed never recorded stars, so they get credited
+on first load: levels that earned a PERFECT badge count in full, and the other
+finished levels count for 60%. Guessing low is the safe direction — replaying a
+level can only ever raise its best.
+
 Progress is saved in the browser (localStorage), so unlocked magic sticks
 between play sessions, along with whatever Lily is wearing. The title screen has
 a tiny "start my magic over" link (with a confirmation) to reset.
@@ -121,7 +148,8 @@ a tiny "start my magic over" link (with a confirmation) to reset.
 - Levels get gently longer and trickier (moving islands appear from level 3),
   but the difficulty **stops climbing at level 14** — after that they only keep
   being different, never harder, and every gap stays well within easy jump range.
-- Collecting stars is optional — reaching the crystal always wins.
+- Collecting stars is optional — reaching the crystal always wins, and stars
+  are only ever gained, never spent or lost.
 - Night only dims the sky and background — the islands, stars, and Lily stay
   bright and easy to see.
 
