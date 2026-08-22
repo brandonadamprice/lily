@@ -1,7 +1,7 @@
 # 🦄 Unicorn Quest: The Lost Magic
 
 A gentle platformer for little players (ages ~4+). Lily the unicorn's magic is
-scattered across **12 lava lands** — win each level to earn a piece of her
+scattered across **50 lava lands** — win each level to earn a piece of her
 magic back!
 
 ## Play it
@@ -51,7 +51,7 @@ it, no install or internet needed.
   fairy dust behind them. Jump right through a flock and they scatter with a
   startled chirp, then drift back into line
 - Hearts! Little hearts pop out when Lily flutters, grabs a star or wins a
-  level, they trail behind her gallop once Sparkle Trail is unlocked, and tiny
+  level, they trail behind her gallop with the sparkle trails on, and tiny
   ones twinkle away in the sky
 - Two ranges of animated volcanoes smoke, glow, drip lava, and erupt on their
   own rhythms
@@ -61,29 +61,57 @@ it, no install or internet needed.
   different time of day
 - Touch the crystal at the end of a level and its magic streams into Lily as a
   rainbow river of sparkles
-- Beating level 12 triggers a grand finale: Lily flies a rainbow
+- Dress her up in the **Decorator** — manes, horns, wings, hats, shoes, a
+  little friend to tag along, a sparkle trail and a glow, all mix-and-match
+- Beating level 50 triggers a grand finale: Lily flies a rainbow
   loop-the-loop with fireworks!
 
-## The 12 magic unlocks
+## Magic: 9 powers and 43 things to wear
 
-| Level | Magic |
-|-------|-------|
-| 1 | ✨ Sparkle Trail |
-| 2 | 🌈 Rainbow Mane |
-| 3 | 🦋 Butterfly Friends |
-| 4 | 🧲 Star Magnet |
-| 5 | 💫 Triple Flutter |
-| 6 | 🪽 Magic Wings — hold JUMP in the air to glide! |
-| 7 | 🦘 Super Bounce — rainbow shoes on every hoof! |
-| 8 | 🌠 Glitter Gallop |
-| 9 | 👑 Star Crown |
-| 10 | 🌟 Zoom Hooves — gallop super fast! |
-| 11 | ☁️ Cloud Buddy — a happy little cloud tags along |
-| 12 | 🔮 ALL the Magic! |
+Every one of the 50 levels gives back exactly one piece of magic. **Powers** are
+permanent and always on. Everything else is a **cosmetic** that lands in a
+dressing-up slot — Lily puts her newest thing on straight away, and nothing is
+ever taken away, so a win only ever adds another option.
+
+### Powers
+
+| Level | Power | What it does |
+|-------|-------|--------------|
+| 4 | 🧲 Star Magnet | Stars float right to you |
+| 5 | 💫 Triple Flutter | Jump three times in a row |
+| 6 | 🪽 Magic Wings | Hold JUMP in the air to glide down slowly |
+| 7 | 🦘 Super Bounce | Extra bouncy jumps |
+| 10 | 🌟 Zoom Hooves | Gallop super fast |
+| 16 | 💗 Quad Flutter | Jump FOUR times in a row |
+| 23 | 🌀 Super Magnet | Stars come from way further away |
+| 30 | 🪶 Feather Fall | Float down as gently as a feather |
+| 38 | 🚀 Mega Bounce | The biggest, bounciest jumps of all |
+
+Levels 6 and 7 hand over a power *and* the matching outfit (fairy wings, rainbow
+shoes).
+
+### The Decorator
+
+**🎀 Decorate Lily** on the title screen — or right off the win card — opens the
+dressing-up room. One pick per slot, and a live Lily shows the whole outfit as
+you tap. The number is the level that unlocks it; the rest she starts with.
+
+| Slot | Choices |
+|------|---------|
+| 🌈 Mane | Pastel, Rainbow (2), Sunset (13), Minty (19), Bubblegum (25), Galaxy (33), Golden (41), Candy Cane (47) |
+| 🦄 Horn | Golden, Crystal (14), Candy (21), Starlight (29), Coral (37) |
+| 🪽 Wings | No wings, Fairy (6), Butterfly (17), Feathery (24), Dragonfly (31), Starlight (44), Rainbow (49) |
+| 👑 Hat | Nothing, Star Crown (9), Flower Crown (18), Tiara (26), Big Bow (35), Party Hat (43) |
+| 👟 Shoes | Hooves, Rainbow (7), Star Boots (20), Jelly (27), Golden (36), Slippers (45) |
+| 🦋 Friend | On my own, Butterflies (3), Cloud (11), Star Sprite (22), Bumblebee (32), Birdie (40), Ladybug (42) |
+| ✨ Trail | Fairy Dust, Nothing, Sparkles (1), Glitter (8), Hearts (15), Bubbles (28), Confetti (39), Gold Dust (46), Rainbow (48) |
+| 💫 Glow | No glow, Shimmer (12), Rainbow Ring (34), ALL the Magic! (50) |
+
+The level map is a strip you scroll, parked on the level you are up to.
 
 Progress is saved in the browser (localStorage), so unlocked magic sticks
-between play sessions. The title screen has a tiny "start my magic over" link
-(with a confirmation) to reset.
+between play sessions, along with whatever Lily is wearing. The title screen has
+a tiny "start my magic over" link (with a confirmation) to reset.
 
 ## Kid-friendly by design
 
@@ -91,7 +119,8 @@ between play sessions. The title screen has a tiny "start my magic over" link
   cloud that carries you back to the last island you stood on.
 - Generous jumps, coyote time, and the flutter double-jump make the gaps easy.
 - Levels get gently longer and trickier (moving islands appear from level 3),
-  but every level stays well within easy jump range.
+  but the difficulty **stops climbing at level 14** — after that they only keep
+  being different, never harder, and every gap stays well within easy jump range.
 - Collecting stars is optional — reaching the crystal always wins.
 - Night only dims the sky and background — the islands, stars, and Lily stay
   bright and easy to see.
