@@ -224,23 +224,35 @@ web fonts simply fall back to that old system stack.
 # 🏠 Walk Me Home
 
 Eight little kids, aged **3 to 7**, have wandered off — one per level. You are
-the helper (a big kid with a ponytail and a sunny yellow top): walk up to the
-lost kid and they take your hand and follow you. Hop over the puddles and
-streams, pick up the things they dropped along the way, and at the end of the
-path find the house that is **theirs**.
+**Pip**, a silly penguin in a rainbow beanie and a bow tie: waddle up to the
+lost kid and they take your flipper and follow you. Hop over the puddles and
+streams, scoop up the things they dropped along the way (they carry them home
+in their arms), and at the end of the path find the house that is **theirs**.
 
 ## How to play
 
-- **⬅ ➡** (or A/D) — walk
+- **⬅ ➡** (or A/D) — waddle
 - **⬆ / Space** (or W) — hop, and press it **again in the air** for a big hop
 - Big on-screen buttons work too (mouse or touch)
-- Walk over to the sniffling kid and they take your hand. From then on they
-  follow in your footsteps a moment behind you — whatever you hopped over,
-  they hop over too. Little ones toddle a little further behind
+- Pip waddles (rocking side to side, feet flapping), flaps his flippers in
+  the air, belly-flops on landing, and blinks now and then
+- Waddle over to the sniffling kid and they take your flipper. From then on
+  they follow in your footsteps a moment behind you — whatever you hopped
+  over, they hop over too. Little ones toddle a little further behind
 - The kid carries a **balloon with their age on it**
 - 🧸 The things they dropped — a teddy, a ball, a hat, a boot, a lolly, a
-  book, a bucket, a rubber duck — are scattered along the path and up on the
-  floating ledges. Finding them all earns a 💖 **PERFECT** badge for the level
+  book, a bucket, a rubber duck, a toy horse — are scattered along the path
+  and up on the floating ledges. When Pip touches one it hops into the
+  **kid's arms** and they carry it the rest of the way (or Pip carries it on
+  his belly until the kid is found, then hands the lot over). Finding them
+  all earns a 💖 **PERFECT** badge for the level
+- 🐴 A **friendly horse** trots up and down a stretch of the meadow, the farm
+  and the fair. Hop onto its back and it carries you (and the kid hops up
+  behind you) with a neigh and a shower of hearts. It never leaves its
+  stretch of ground, so it is a ride, not a shortcut over the water
+- **Day and night**: the park, meadow, farm, woods and rainy town are by day;
+  the beach, the snowy village and the fair are under the moon, with stars,
+  fireflies drifting along the path and every window lit
 - At the end of the path is a **street of houses**. The kid shows a picture of
   their house in a thought bubble, and the picture is drawn by the *same* code
   as the real houses, so it is an exact match. Every house has a bright wall
@@ -261,13 +273,13 @@ path find the house that is **theirs**.
 | Level | Kid | Age | Where they're lost | Their house |
 |-------|-----|-----|--------------------|-------------|
 | 1 | Mia | 3 | the Sunny Park | yellow, red door, a flag on the roof |
-| 2 | Theo | 4 | the Flower Meadow (petals drift down) | blue, yellow door, an apple tree |
-| 3 | Zoe | 5 | the Beach | pink, white door, a heart on the roof |
-| 4 | Sam | 6 | the Farm | red, white door, a star on the roof |
+| 2 | Theo | 4 | the Flower Meadow (petals drift down, a horse) | blue, yellow door, an apple tree |
+| 3 | Zoe | 5 | the Beach, at night | pink, white door, a heart on the roof |
+| 4 | Sam | 6 | the Farm (a horse) | red, white door, a star on the roof |
 | 5 | Ava | 4 | the Autumn Woods (leaves fall) | green, purple door, flower boxes |
-| 6 | Leo | 7 | the Snowy Village (it snows) | lilac, red door, a snowman |
+| 6 | Leo | 7 | the Snowy Village at night (it snows) | lilac, red door, a snowman |
 | 7 | Nia | 5 | the Rainy Town (rain and a rainbow) | orange, blue door, a rainbow |
-| 8 | Bea | 3 | the Starry Fair (night, lanterns, fireworks at the end) | cream, purple door, a smoking chimney |
+| 8 | Bea | 3 | the Starry Fair (night, lanterns, a pony, fireworks at the end) | cream, purple door, a smoking chimney |
 
 Levels 1–2 have two houses to choose from, the rest three. Each level has a
 few more gaps, a touch wider, and one more dropped thing to find (3 → 5), but
@@ -275,6 +287,17 @@ nothing ever gets hard — every gap is an easy hop.
 
 Walking the last kid home sets off fireworks and a rainbow "Everyone is home!"
 card.
+
+## Sounds
+
+Every sound is its own little synth patch, none shared with Unicorn Quest:
+Pip's "wheep!" hop and "brrrp" air-hop, the belly-flop "flomp", the softest
+pat-pat footsteps, a xylophone plink-plonk-PLING that climbs with each thing
+found, a "wheeee" and a bell when something lands in the kid's arms, the kid's
+sniffles and "yay!", a sploosh with droplets, the rescue bubble bubbling up
+and popping, a knock, the neighbour's cat and its "mm-mm", a door creak, a
+ta-da-da-DAAA with bells, a tumble of tiny bells for PERFECT, a party whistle
+and bang for fireworks, and the horse's wobbly neigh and clip-clops.
 
 ## The tune: "Walking Home"
 
@@ -299,3 +322,12 @@ Progress is saved in the browser (localStorage): `wmh_home` is how many kids
 are home (levels unlock in order) and `wmh_things` is the most things ever
 found in each level. The title screen has a "start over" link with a
 confirmation.
+
+## If it feels slow
+
+Add `?debug` to the address (for example `walk-me-home/?debug`) and a small
+readout appears above the buttons: frames per second, the longest recent
+frame, how many milliseconds of each frame the game's own code took, and the
+canvas size. Game code is normally well under a millisecond; if the frame rate
+is low anyway, the time is going to the browser painting the canvas, which is
+about the device and browser rather than the game logic.
