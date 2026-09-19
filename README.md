@@ -1,35 +1,66 @@
-# 🦄 Unicorn Quest: The Lost Magic
+# 🎮 Lily's games
 
-A gentle platformer for little players (ages ~4+). Lily the unicorn's magic is
-scattered across **50 lava lands** — win each level to earn a piece of her
-magic back!
+Gentle little games for small hands (ages ~4+), all served from this repo.
+Opening the site shows a **game menu** — pick a game, play, and the
+🎮 **All games** button on each game's title screen brings you back.
+
+| Game | What it is |
+|------|------------|
+| 🦄 [Unicorn Quest](#-unicorn-quest-the-lost-magic) | A platformer: hop across 50 lava lands to win Lily's magic back |
+| 🏠 [Walk Me Home](#-walk-me-home) | Hold a lost kid's hand and walk them home, one kid per level, 8 levels |
 
 ## Play it
 
 🎮 **[unicorngame.hallowedgains.com](https://unicorngame.hallowedgains.com)**
 
 Served straight from this repo by GitHub Pages — every push to `main` goes
-live within a minute or so.
+live within a minute or so. You can also open [index.html](index.html)
+straight from disk — double-click it, no install or internet needed — or run
+any static server in the repo folder (`python3 -m http.server`).
 
 ### Install it as an app
 
-Unicorn Quest is a PWA, so it can live on a home screen like a real app —
+The whole site is one PWA, so it can live on a home screen like a real app —
 its own icon, no browser bars, and it works with no internet at all.
 
-- **Android / Chrome / Edge** — an **📲 Install Unicorn Quest** button appears
-  on the title screen (the browser menu has "Install" too)
+- **Android / Chrome / Edge** — an **📲 Install Lily's games** button appears
+  on the menu (the browser menu has "Install" too)
 - **iPhone / iPad** — tap **Share** ⬆️ then **Add to Home Screen** (Safari has
-  no install button; the title screen shows a reminder)
+  no install button; the menu shows a reminder)
 - **Desktop Chrome / Edge** — the install icon at the right of the address bar
 
-Once installed it opens fullscreen in landscape and plays offline. Saved magic
-is kept by the browser, so it carries over from the website to the installed
-app on the same device.
+Once installed it opens fullscreen in landscape and plays offline. Progress is
+saved by the browser per game, so it carries over from the website to the
+installed app on the same device.
+
+## How the repo is laid out
+
+```
+index.html            the game menu
+unicorn/index.html    Unicorn Quest — one self-contained file
+walk-me-home/index.html   Walk Me Home — one self-contained file
+manifest.json, sw.js  the app wrapper: install metadata + offline cache
+icon-*.png            app icons (rendered by tools/make-icons.mjs)
+```
+
+Each game is a single HTML file with no dependencies — graphics, sounds, music
+and levels are all generated in code. The menu only links to them and peeks at
+each game's saved progress to say how far along it is.
+
+The service worker (`sw.js`) caches the menu and both games. It fetches pages
+from the network first and falls back to its cache, so a push to `main` is
+still live on the next launch — the cache is only there for when the network
+isn't. Bump its `CACHE` name when the icons, manifest or list of pages change;
+it carries a panic switch in its header comment if it ever needs turning off.
+
+---
+
+# 🦄 Unicorn Quest: The Lost Magic
+
+A gentle platformer for little players. Lily the unicorn's magic is scattered
+across **50 lava lands** — win each level to earn a piece of her magic back!
 
 ## How to play
-
-You can also just open [index.html](index.html) in any browser — double-click
-it, no install or internet needed.
 
 - **⬅ ➡** (or A/D) — run
 - **⬆ / Space** (or W) — jump
@@ -154,17 +185,10 @@ a tiny "start my magic over" link (with a confirmation) to reset.
   bright and easy to see.
 
 Everything (graphics, sounds, music, levels) is generated in code — the whole
-game is one HTML file with no dependencies. The other files are just the app
-wrapper: `manifest.json` describes the installed app, `sw.js` caches the game
-for offline play, and the four icons are rendered by the game's own unicorn
-drawing code (`node tools/make-icons.mjs` re-makes them).
+game is one HTML file with no dependencies. The app icons are rendered by the
+game's own unicorn drawing code (`node tools/make-icons.mjs` re-makes them).
 
-The service worker fetches the page from the network first and falls back to
-its cache, so a push to `main` is still live on the next launch — the cache is
-only there for when the network isn't. `sw.js` carries a panic switch in its
-header comment if it ever needs to be turned off.
-
-## The cutesy look
+## The cutesy look (both games)
 
 Everything the player reads sits on a pastel-pink card: polka-dot paper, a
 white ring with a candy-pink halo, dashed "sticker" buttons, glowing candy
@@ -179,7 +203,7 @@ doesn't fit is scaled down to suit.
 
 ## Fonts
 
-The game pins two Google Fonts so it looks the same on every device:
+Both games and the menu pin two Google Fonts so it looks the same on every device:
 
 - **Pacifico** — the cursive script used for big titles ("Unicorn Quest",
   "Level complete!")
@@ -194,3 +218,84 @@ the game used to look different on mobile and desktop.
 
 Playing offline by double-clicking the file still works; without a network the
 web fonts simply fall back to that old system stack.
+
+---
+
+# 🏠 Walk Me Home
+
+Eight little kids, aged **3 to 7**, have wandered off — one per level. You are
+the helper (a big kid with a ponytail and a sunny yellow top): walk up to the
+lost kid and they take your hand and follow you. Hop over the puddles and
+streams, pick up the things they dropped along the way, and at the end of the
+path find the house that is **theirs**.
+
+## How to play
+
+- **⬅ ➡** (or A/D) — walk
+- **⬆ / Space** (or W) — hop, and press it **again in the air** for a big hop
+- Big on-screen buttons work too (mouse or touch)
+- Walk over to the sniffling kid and they take your hand. From then on they
+  follow in your footsteps a moment behind you — whatever you hopped over,
+  they hop over too. Little ones toddle a little further behind
+- The kid carries a **balloon with their age on it**
+- 🧸 The things they dropped — a teddy, a ball, a hat, a boot, a lolly, a
+  book, a bucket, a rubber duck — are scattered along the path and up on the
+  floating ledges. Finding them all earns a 💖 **PERFECT** badge for the level
+- At the end of the path is a **street of houses**. The kid shows a picture of
+  their house in a thought bubble, and the picture is drawn by the *same* code
+  as the real houses, so it is an exact match. Every house has a bright wall
+  colour and one big feature (a flag, a heart, a star, a snowman, a rainbow,
+  chimney smoke, a tree, flower boxes), so a three-year-old can match it
+- Walk up to a door to knock. A **wrong door** is answered by a friendly cat
+  in the window and a little "not that one…" — no penalty, just try another.
+  The **right door** swings open, the kid's grown-up is there with open arms,
+  and the kid runs in for a hug
+- Fall in the water and a big soap bubble scoops you up and floats you back to
+  the bank. The kid waits there for you
+- **Esc** (or the ⏸ button) pauses; 🔊 mutes the music and sounds
+- After a level, press **Space** (or Enter) for the next kid
+- The title screen shows every kid you have walked home, waving in a row
+
+## The eight friends
+
+| Level | Kid | Age | Where they're lost | Their house |
+|-------|-----|-----|--------------------|-------------|
+| 1 | Mia | 3 | the Sunny Park | yellow, red door, a flag on the roof |
+| 2 | Theo | 4 | the Flower Meadow (petals drift down) | blue, yellow door, an apple tree |
+| 3 | Zoe | 5 | the Beach | pink, white door, a heart on the roof |
+| 4 | Sam | 6 | the Farm | red, white door, a star on the roof |
+| 5 | Ava | 4 | the Autumn Woods (leaves fall) | green, purple door, flower boxes |
+| 6 | Leo | 7 | the Snowy Village (it snows) | lilac, red door, a snowman |
+| 7 | Nia | 5 | the Rainy Town (rain and a rainbow) | orange, blue door, a rainbow |
+| 8 | Bea | 3 | the Starry Fair (night, lanterns, fireworks at the end) | cream, purple door, a smoking chimney |
+
+Levels 1–2 have two houses to choose from, the rest three. Each level has a
+few more gaps, a touch wider, and one more dropped thing to find (3 → 5), but
+nothing ever gets hard — every gap is an easy hop.
+
+Walking the last kid home sets off fireworks and a rainbow "Everyone is home!"
+card.
+
+## The tune: "Walking Home"
+
+The music is a 16-bar loop in G major at a walking pace (~111 BPM) that plays
+back through Web Audio. It is written in the source as a **piano roll** you can
+read and edit — one token per eighth note:
+
+```
+D5 - B4 - G4 - A4 B4 | C5 - B4 - G4 - - . | …
+```
+
+`D5` starts a note, `-` holds it, `.` is a rest, `|` is just a bar line. A
+chord list (`G Em C D …`, one per bar) drives a soft bass (root on beat 1,
+fifth on beat 3), a humming pad, a shaker on the off-beats and a woodblock on
+2 and 4 for the walking feel. Every other pass adds a quiet music-box echo an
+octave up. The last bar walks up A–F♯–A–C on the D chord straight into the
+opening D over G, so the loop joins without a seam.
+
+## Saving
+
+Progress is saved in the browser (localStorage): `wmh_home` is how many kids
+are home (levels unlock in order) and `wmh_things` is the most things ever
+found in each level. The title screen has a "start over" link with a
+confirmation.
