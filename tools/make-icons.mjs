@@ -1,6 +1,7 @@
-// Renders the app icons using the game's OWN drawing code, so the unicorn on
-// your home screen is the same one you play as. Everything stays generated in
-// code — no image editor in the loop.
+// Renders the app icons using Unicorn Quest's OWN drawing code, so the unicorn
+// on your home screen is the same one you play as. Everything stays generated
+// in code — no image editor in the loop. The icons sit at the repo root because
+// they belong to the whole "Lily's games" app, not just the unicorn game.
 //
 //   npx playwright@1 install chromium    (once)
 //   node tools/make-icons.mjs
@@ -26,7 +27,7 @@ const ICONS = [
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-await page.goto(pathToFileURL(join(root, 'index.html')).href);
+await page.goto(pathToFileURL(join(root, 'unicorn', 'index.html')).href);
 await page.waitForTimeout(500);   // let the game boot so its globals exist
 
 for (const { file, size, inset } of ICONS) {
