@@ -223,29 +223,35 @@ web fonts simply fall back to that old system stack.
 
 # 🏠 Walk Me Home
 
-Eight little kids, aged **3 to 7**, have wandered off — one per level. You are
-**Pip**, a silly penguin in a rainbow beanie and a bow tie: waddle up to the
-lost kid and they take your flipper and follow you. Hop over the puddles and
-streams, scoop up the things they dropped along the way (they carry them home
-in their arms), and at the end of the path find the house that is **theirs**.
+Eight little kids, aged **3 to 7**, have wandered off — one per level — and
+you are the kid's **mom or dad**. Every level starts at the family's front
+door. Follow the clues along the path to find where the kid is hiding, then
+hold their hand and walk them all the way back home.
 
 ## How to play
 
-- **⬅ ➡** (or A/D) — waddle
+- **⬅ ➡** (or A/D) — walk
 - **⬆ / Space** (or W) — hop, and press it **again in the air** for a big hop
 - Big on-screen buttons work too (mouse or touch)
-- Pip waddles (rocking side to side, feet flapping), flaps his flippers in
-  the air, belly-flops on landing, and blinks now and then
-- Waddle over to the sniffling kid and they take your flipper. From then on
-  they follow in your footsteps a moment behind you — whatever you hopped
-  over, they hop over too. Little ones toddle a little further behind
+- **Finding them.** The kid's dropped things are the clues — a teddy, a ball,
+  a hat, a boot, a lolly, a book, a bucket, a rubber duck, a toy horse —
+  scattered along the path and up on the floating ledges, with the kid's
+  little footprints in between. Pick one up and the parent thinks
+  "Mia's teddy! went this way ➜". At the far end of the path is a clearing
+  with **three hiding spots** (bushes, trees, rocks, logs, hay bales, snow
+  piles, sandcastles, tents — it depends on the place). Sniffles and a
+  "sniff…" bubble drift up from the right one, and tiny shoes peek out
+  underneath. Walk up to a spot to look behind it: check a wrong one and a
+  **bunny, bird, owl or crab** pops out with a "Boo!" — no penalty, just try
+  the next
+- **Found!** The kid jumps for joy ("Mommy!" / "Daddy!"), takes your hand,
+  and everything you picked up flies into their arms — they carry it home
+- **Walking home.** The kid follows in your footsteps a moment behind you —
+  whatever you hop over, they hop over too. Little ones toddle a little
+  further behind. The screen shifts so you can see ahead on the way back.
+  At the front door the other parent is waiting with open arms for the hug
 - The kid carries a **balloon with their age on it**
-- 🧸 The things they dropped — a teddy, a ball, a hat, a boot, a lolly, a
-  book, a bucket, a rubber duck, a toy horse — are scattered along the path
-  and up on the floating ledges. When Pip touches one it hops into the
-  **kid's arms** and they carry it the rest of the way (or Pip carries it on
-  his belly until the kid is found, then hands the lot over). Finding them
-  all earns a 💖 **PERFECT** badge for the level
+- Finding every dropped thing earns a 💖 **PERFECT** badge for the level
 - 🐴 A **friendly horse** trots up and down a stretch of the meadow, the farm
   and the fair. Hop onto its back and it carries you (and the kid hops up
   behind you) with a neigh and a shower of hearts. It never leaves its
@@ -253,37 +259,28 @@ in their arms), and at the end of the path find the house that is **theirs**.
 - **Day and night**: the park, meadow, farm, woods and rainy town are by day;
   the beach, the snowy village and the fair are under the moon, with stars,
   fireflies drifting along the path and every window lit
-- At the end of the path is a **street of houses**. The kid shows a picture of
-  their house in a thought bubble, and the picture is drawn by the *same* code
-  as the real houses, so it is an exact match. Every house has a bright wall
-  colour and one big feature (a flag, a heart, a star, a snowman, a rainbow,
-  chimney smoke, a tree, flower boxes), so a three-year-old can match it
-- Walk up to a door to knock. A **wrong door** is answered by a friendly cat
-  in the window and a little "not that one…" — no penalty, just try another.
-  The **right door** swings open, the kid's grown-up is there with open arms,
-  and the kid runs in for a hug
 - Fall in the water and a big soap bubble scoops you up and floats you back to
   the bank. The kid waits there for you
 - **Esc** (or the ⏸ button) pauses; 🔊 mutes the music and sounds
 - After a level, press **Space** (or Enter) for the next kid
-- The title screen shows every kid you have walked home, waving in a row
+- The title screen shows every kid you have brought home, waving in a row
 
 ## The eight friends
 
-| Level | Kid | Age | Where they're lost | Their house |
-|-------|-----|-----|--------------------|-------------|
-| 1 | Mia | 3 | the Sunny Park | yellow, red door, a flag on the roof |
-| 2 | Theo | 4 | the Flower Meadow (petals drift down, a horse) | blue, yellow door, an apple tree |
-| 3 | Zoe | 5 | the Beach, at night | pink, white door, a heart on the roof |
-| 4 | Sam | 6 | the Farm (a horse) | red, white door, a star on the roof |
-| 5 | Ava | 4 | the Autumn Woods (leaves fall) | green, purple door, flower boxes |
-| 6 | Leo | 7 | the Snowy Village at night (it snows) | lilac, red door, a snowman |
-| 7 | Nia | 5 | the Rainy Town (rain and a rainbow) | orange, blue door, a rainbow |
-| 8 | Bea | 3 | the Starry Fair (night, lanterns, a pony, fireworks at the end) | cream, purple door, a smoking chimney |
+| Level | Kid | Age | You play | Where they're lost | Hiding spots |
+|-------|-----|-----|----------|--------------------|--------------|
+| 1 | Mia | 3 | her mom | the Sunny Park | bush, tree, rock |
+| 2 | Theo | 4 | his dad | the Flower Meadow (petals drift down, a horse) | bush, tree, log |
+| 3 | Zoe | 5 | her mom | the Beach, at night | sandcastle, rock, tent |
+| 4 | Sam | 6 | his dad | the Farm (a horse) | hay bale, bush, log |
+| 5 | Ava | 4 | her dad | the Autumn Woods (leaves fall) | tree, log, bush |
+| 6 | Leo | 7 | his mom | the Snowy Village at night (it snows) | snow pile, pine, log |
+| 7 | Nia | 5 | her mom | the Rainy Town (rain and a rainbow) | bush, tree, rock |
+| 8 | Bea | 3 | her dad | the Starry Fair (night, lanterns, a pony, fireworks at the end) | tent, bush, log |
 
-Levels 1–2 have two houses to choose from, the rest three. Each level has a
-few more gaps, a touch wider, and one more dropped thing to find (3 → 5), but
-nothing ever gets hard — every gap is an easy hop.
+Each level has a few more gaps, a touch wider, and one more dropped thing to
+find (3 → 5), but nothing ever gets hard — every gap is an easy hop. The walk
+home is the same path in reverse, with the kid in tow.
 
 Walking the last kid home sets off fireworks and a rainbow "Everyone is home!"
 card.
@@ -291,11 +288,13 @@ card.
 ## Sounds
 
 Every sound is its own little synth patch, none shared with Unicorn Quest:
-Pip's "wheep!" hop and "brrrp" air-hop, the belly-flop "flomp", the softest
-pat-pat footsteps, a xylophone plink-plonk-PLING that climbs with each thing
-found, a "wheeee" and a bell when something lands in the kid's arms, the kid's
-sniffles and "yay!", a sploosh with droplets, the rescue bubble bubbling up
-and popping, a knock, the neighbour's cat and its "mm-mm", a door creak, a
+"hup" hops and a trill for the air-hop, soft thumps and footsteps, the
+parent calling out, an "aha!" ping for each clue, a xylophone
+plink-plonk-PLING that climbs with each thing found, a "wheeee" and a bell
+when something lands in the kid's arms, the kid's sniffles and "yay!", the
+critters saying hello (a bunny's squeak, a bird's chirp, an owl's hoot, a
+crab's clicking) and a "mm-mm" for a wrong spot, a sploosh with droplets, the
+rescue bubble bubbling up and popping, a knock, a door creak, a
 ta-da-da-DAAA with bells, a tumble of tiny bells for PERFECT, a party whistle
 and bang for fireworks, and the horse's wobbly neigh and clip-clops.
 
